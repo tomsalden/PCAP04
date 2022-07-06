@@ -1,0 +1,107 @@
+#include "include/pcap04IIC.h"
+#include <SPI.h>
+#include <Wire.h>
+
+char SlaveSelectPin = 15; //The pin for Slave-Selecting the chip (SPI)
+char address = 0x28;
+
+int sck = 14;
+int mosi = 13;
+int miso = 12;
+
+pcap04_version_t version = PCAP04_V1;
+pcap_serial_interface_t interface = PCAP_SPI_MODE;
+pcap_measurement_modes_t measurement = STANDARD;
+pcap_config_t config;
+
+PCAP04IIC CapSensor(version,measurement,address,config);
+//PCAP04 CapSensor(version, interface,measurement,SlaveSelectPin,config);
+
+SPISettings pcap_spi_settings = SPISettings(20000000, MSBFIRST, SPI_MODE1);
+
+void setup() {
+    delay(100);
+    Serial.begin(115200);
+    Serial.println("ESP32 has started, now testing connection to PCAP04");
+
+    pinMode(SlaveSelectPin,OUTPUT);
+    pinMode(sck, OUTPUT);
+    pinMode(miso, INPUT);
+    pinMode(mosi, OUTPUT);
+
+    digitalWrite(SlaveSelectPin, 1);
+
+    SPI.begin();
+    
+
+    while(1){
+        delay(100);
+        unsigned short recval = 0;
+        SPI.beginTransaction(pcap_spi_settings);
+        digitalWrite(SlaveSelectPin, LOW);
+
+        unsigned char sent = 0x7e;
+        recval = SPI.transfer(sent);
+        digitalWrite(SlaveSelectPin, HIGH);
+        SPI.endTransaction();
+        Serial.println(recval);
+        delay(3000);
+        delay(100);
+    }
+
+    // while (CapSensor.test_connection() == false){
+    //     Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+    //     delay(3000);
+    // }
+
+
+    return;
+
+    unsigned short test = 1111111100000000;
+    Serial.println("Testing high/lowbytes");
+    Serial.println(highByte(test));
+    Serial.println(lowByte(test));
+    byte byteTest[1];
+    byteTest[0] = highByte(test);
+    byteTest[1] = lowByte(test);
+
+    while (CapSensor.test_connection() == false){
+        Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+        delay(3000);
+    }
+    
+
+    CapSensor.initialize();
+    
+
+    Wire.beginTransmission(address);
+    //unsigned short recval = 0;
+    Wire.write(0x7e);
+    Wire.requestFrom(address,1);
+    byte recval = Wire.read();
+    Serial.println(recval);
+    Wire.endTransmission();
+
+    // digitalWrite(SlaveSelectPin, LOW);
+    // delay(1);
+    // recval = CapSPI.transfer(0x7e);
+    // Serial.println(recval);
+    // digitalWrite(SlaveSelectPin, HIGH);
+
+
+    //Serial.println(CapSPI.bus());
+    //CapSensor.initialize();
+
+    // while (CapSensor.test_connection() == false){
+    //     Serial.println("Connection to PCAP04 failed!! Retrying in 1 second");
+    //     delay(1000);
+    //     CapSensor.initialize();
+    // }
+    
+    Serial.println("PCAP04 has been connected and is initialised");
+}
+
+
+void loop() {
+
+}

@@ -128,24 +128,23 @@ void setup() {
 
     while (CapSensor.test_connection() == false){
         Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+        digitalWrite(ledR,HIGH);
         delay(3000);
     }
+    digitalWrite(ledR,LOW);
 
     Serial.println("\n Initialising PCAP04");
-    digitalWrite(ledG,HIGH);
-    digitalWrite(ledR,HIGH);
+    digitalWrite(ledB,HIGH);
 
     CapSensor.init_nvram();
-
     pcap04_configure_registers(CapSensor, &CapSensorConfig);
-    
-
     CapSensor.initializeIIC();
 
     attachInterrupt(digitalPinToInterrupt(INTN_PG5),pcap_cdc_complete_callback,FALLING);
     
     Serial.println("PCAP04 has been connected and is initialised");
-    digitalWrite(ledR, LOW);
+    digitalWrite(ledB, LOW);
+    digitalWrite(ledG, HIGH);
     delay(1000);
     CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     return;

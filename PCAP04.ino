@@ -219,7 +219,6 @@ void loop() {
         Serial.print(result0,9);
         Serial.print(",");Serial.print(result1,9);
         Serial.print(",");Serial.print(result2,9);        
-        Serial.print(",");Serial.println();
         digitalWrite(ledR, LOW);
     }
     

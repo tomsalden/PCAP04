@@ -101,7 +101,7 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
   //Reg29 settings
 
   //Reg42 settings
-  pcap_config->EN_ASYNC_READ = 0;           //Enable asyncronised read (only update results once read)
+  pcap_config->EN_ASYNC_READ = 0;           //Enable Synchronised read (Update results based on pin interrupt)
 
 
   pcap.update_config(pcap_config);

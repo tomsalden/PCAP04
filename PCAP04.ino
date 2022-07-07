@@ -3,12 +3,13 @@
 #include <Wire.h>
 #include <ArduinoJson.h>
 
-char address = 0x28;
+#define INTN_PG5 2 //DataIsReady from PCAP04
+#define powerLed 27
+#define ledR 26
+#define ledG 33
+#define ledB 32
 
-int powerLed = 27;
-int ledR = 26;
-int ledG = 33;
-int ledB = 32;
+#define address 0x28
 
 unsigned long current_micros = 0;
 
@@ -29,7 +30,7 @@ pcap_status_t* pcap1_status;
 
 PCAP04IIC CapSensor(version,measurement,address,CapSensorConfig);
 
-void pcap1_cdc_complete_callback(){
+void pcap_cdc_complete_callback(){
   CapSensor.cdc_complete_flag = true;
 }
 
@@ -100,7 +101,7 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
   //Reg29 settings
 
   //Reg42 settings
-  pcap_config->EN_ASYNC_READ = 1;           //Enable asyncronised read (only update results once read)
+  pcap_config->EN_ASYNC_READ = 0;           //Enable asyncronised read (only update results once read)
 
 
   pcap.update_config(pcap_config);
@@ -119,6 +120,7 @@ void setup() {
     pinMode(ledR, OUTPUT);
     pinMode(ledG, OUTPUT);
     pinMode(ledB, OUTPUT);
+    pinMode(INTN_PG5, INPUT);
 
     digitalWrite(powerLed,HIGH);
     
@@ -140,26 +142,12 @@ void setup() {
 
     CapSensor.initializeIIC();
 
-    
-
-    // digitalWrite(SlaveSelectPin, LOW);
-    // delay(1);
-    // recval = CapSPI.transfer(0x7e);
-    // Serial.println(recval);
-    // digitalWrite(SlaveSelectPin, HIGH);
-
-
-    //Serial.println(CapSPI.bus());
-    //CapSensor.initialize();
-
-    // while (CapSensor.test_connection() == false){
-    //     Serial.println("Connection to PCAP04 failed!! Retrying in 1 second");
-    //     delay(1000);
-    //     CapSensor.initialize();
-    // }
+    attachInterrupt(digitalPinToInterrupt(INTN_PG5),pcap_cdc_complete_callback,FALLING);
     
     Serial.println("PCAP04 has been connected and is initialised");
     digitalWrite(ledR, LOW);
+    delay(1000);
+    CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     return;
 }
 
@@ -221,7 +209,4 @@ void loop() {
         Serial.print(",");Serial.print(result2,9);        
         digitalWrite(ledR, LOW);
     }
-    
-    delay(1000);
-    pcap1_cdc_complete_callback();
 }

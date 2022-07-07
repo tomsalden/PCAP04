@@ -64,9 +64,11 @@ In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-
 # Future improvements
 ✅Ability to connect to and read data from PCAP04
 
-⬜️Read data synchronously with PCAP04, as recommended in the datasheet
+✅Read data synchronously with PCAP04, as recommended in the datasheet
 
 ⬜️Add SD-card to the system to log data
+
+⬜Place PCAP04 settings file on SD card
 
 ⬜️Create a PCB for this system
 

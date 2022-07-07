@@ -11,7 +11,10 @@ An example of his integration of the library is visible on his [Metsensor page](
 
 
 # Interconnections PCAP04-Dev-Kit and ESP32 DevKit-WROOM
-The interconnects used for the current firmware.
+The interconnects used for the current firmware. The following images show the pinout of the [ESP32 board](https://raw.githubusercontent.com/AchimPieters/esp32-homekit-camera/master/Images/ESP32-30PIN-DEVBOARD.png) and the PCAP04.
+
+![](/Documents/ESP32-30PIN-DEVBOARD.png)
+![](/Documents/PCAP04%20Pinout.png)
 ## Power
 | ESP32         |  PCAP04   |
 |---------------|-----------|

@@ -56,7 +56,7 @@ At this point in time, the set-up only works via the serial monitor. The followi
 2. The ESP will test the I2C connection to the PCAP04, indicated with a Red-Green light
 3. The ESP will initialise the PCAP04 and write the correct configuration to the chip. Once done, the Led turns green
 4. After initialisation, the PCAP04 will start its measurements. The ESP32 will retreive a new measurement every second, indicated by a flashing red-green light.
-5. The ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L204) file and comment the Print for Excel lines.)
+5. The ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
 
 Now, the Serial Port of the Arduino IDE can be used to readout the values.
 In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-is-data-streamer-1d52ffce-261c-4d7b-8017-89e8ee2b806f) in Excel can record, process and save live data.

@@ -1,5 +1,5 @@
 # ESP32 firmware for the PCAP04
-This project has been written as part of a Master's Thesis at the University of Technology in Delft. The thesis is based around a Silicon Carbide MEMS pressure sensor. This sensor is a capacitor-based sensor and to read it out, a Capacitor-to-digital converter is necessary. The PCAP04 should work really well due to its high accuracy and resolution. In addition, because it can measure up to 6 capacitances and compare it to one reference capacitance, it is ideal for multiple sensors in the same envionment.
+This project has been written as part of a Master's Thesis at the [University of Technology in Delft](https://www.tudelft.nl/). The thesis is based around a Silicon Carbide MEMS pressure sensor. This sensor is a capacitor-based sensor and to read it out, a Capacitor-to-digital converter is necessary. The PCAP04 should work really well due to its high accuracy and resolution. In addition, because it can measure up to 6 capacitances and compare it to one reference capacitance, it is ideal for multiple sensors in the same envionment.
 
 # Connecting to the PCAP04
 This firmware is written for the ESP32 DevKit-WROOM (available in the Makerspace from the Electrical Engineering Study Association: [Klushok](https://klushok.etv.tudelft.nl/)).
@@ -12,7 +12,6 @@ An example of his integration of the library is visible on his [Metsensor page](
 
 # Interconnections PCAP04-Dev-Kit and ESP32 DevKit-WROOM
 The interconnects used for the current firmware.
-The first 
 ## Power
 | ESP32         |  PCAP04   |
 |---------------|-----------|

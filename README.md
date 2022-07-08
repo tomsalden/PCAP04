@@ -28,6 +28,15 @@ The interconnects used for the current firmware. The following images show the p
 |GPIO21-I2C SDA |   MOSI_SDA (J2.4) |
 |GPIO22-I2C SCL |   SCK_SCL (J2.6)  |
 
+| ESP32          |  SD-Card Reader   |
+|----------------|-------------------|
+|   3V3          |   +3.3            |
+|   GND          |   GND             |
+|GPIO5-VSPI CS0  |   CS              |
+|GPIO18-VSPI CLK |   SCK             |
+|GPIO19-VSPI MISO|  MISO             |
+|GPIO23-VSPI MOSI|  MOSI             |
+
 ## GPIO connections
 | ESP32         |  PCAP04           |
 |---------------|-------------------|

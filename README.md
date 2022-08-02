@@ -72,6 +72,22 @@ At this point in time, the set-up only works via the serial monitor. The followi
 Now, the Serial Port of the Arduino IDE can be used to readout the values.
 In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-is-data-streamer-1d52ffce-261c-4d7b-8017-89e8ee2b806f) in Excel can record, process and save live data.
 
+# PCB (will be produced in the future)
+The PCB has space for three PCAP04 CDC's. Each CDC can readout 4 to 5 capacitances and has 1 reference capacitor to make sure the base value is correct.
+2 Li-Ion batteries will be attached at the back to power the board, 5-9V can be used for powering this device.
+As an alternative, one PCAP04 EVA Board can be used instead of one PCAP04 bare chip.
+
+The frontside of the PCB:
+
+![](/PCB/PCAP04_Interface/PCB_Front.png)
+
+The backside of the PCB:
+
+![](/PCB/PCAP04_Interface/PCB_Back.png)
+
+
+
+
 # Future improvements
 ✅Ability to connect to and read data from PCAP04
 

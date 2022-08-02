@@ -23,6 +23,8 @@ public:
   void initialize(void);
   void initializeIIC(void);
 
+  void update_address(char, char);
+
   bool test_connection(void);
 
   void init_nvram(void);
@@ -156,6 +158,27 @@ PCAP04IIC::PCAP04IIC(pcap04_version_t version,
   pcap_measurement_mode = measurement_mode;
 
   Wire.begin(21,22);
+  
+}
+
+void PCAP04IIC::update_address(char addr, char configaddr)
+{
+  // write_config(47,0); // STOP DSP
+  // unsigned char I2CData = 0b00011101;
+  // unsigned char newAddress = configaddr << 6;
+  // I2CData = I2CData | newAddress;
+
+  // Serial.print("Raw data: "), Serial.println(I2CData,BIN);
+
+  // Wire.beginTransmission(i2c_address);
+  // Wire.write(0b10100011);               //Write to register
+  // Wire.write(0b11000000);               //Register address 0x00
+  // Wire.write(I2CData);                  //Send new address
+  // Wire.endTransmission();               //Close transmission
+  // delay(1);
+  // send_command(INITIALIZE_OP);
+  device_addr.i2caddr.addr = addr;
+  i2c_address = addr;
   
 }
 

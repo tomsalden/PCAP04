@@ -48,6 +48,8 @@ public:
 
   void stop_sampling(pcap_config_t* config);
 
+  void update_address(char address);
+
   volatile bool cdc_complete_flag = false;
   
 private:
@@ -167,6 +169,11 @@ PCAP04::PCAP04(pcap04_version_t version, pcap_serial_interface_t pcap_sif_mode,
 //   Wire.endTransmission(device_addr.i2c_addr);
 //   Serial.print("i2c stop\n");
 // };
+
+void PCAP04::update_address(char address)
+{
+  device_addr.i2caddr.addr = address;
+}
 
 bool PCAP04::test_connection()
 {

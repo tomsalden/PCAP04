@@ -1,21 +1,39 @@
+//Libraries for PCAP04
 #include "include/pcap04IIC.h"
-#include <SPI.h>
 #include <Wire.h>
 #include <ArduinoJson.h>
 
-#define INTN_PG5 2 //DataIsReady from PCAP04
+//Libraries for SD card
+#include <SPI.h>
+#include "FS.h"
+#include "SD.h"
+
+//Definitions for PCAP pins
+#define INTN_PG5 2    //DataIsReady from PCAP04
+#define address 0x28  //I2C address of PCAP04
+#define refCapacitance 0 //Internal reference capacitance (0 = min, 1 = 1... 31 = 31pF, ish)
+
+//Definitions for indicator Leds
 #define powerLed 27
 #define ledR 26
 #define ledG 33
 #define ledB 32
 
-#define address 0x28
+//Definitions for SD-Card
+#define SD_CS 5
 
 unsigned long current_micros = 0;
+
+unsigned char i2cAddress = 0x00;
 
 float result0;
 float result1;
 float result2;
+
+bool SD_attached = false;
+String fileName = "";
+uint fileNumber = 0;
+String dataMessage;
 
 DynamicJsonDocument results_json(1024);
 
@@ -34,6 +52,95 @@ void pcap_cdc_complete_callback(){
   CapSensor.cdc_complete_flag = true;
 }
 
+void SD_Initialise(){
+  Serial.println("Mounting SD-Card");
+  SD.begin(SD_CS);
+  if(!SD.begin(SD_CS)){
+    Serial.println("Card mount failed");
+    SD_failure_indicator();
+    return;
+  }
+  uint8_t cardType = SD.cardType();
+  if(cardType == CARD_NONE) {
+    Serial.println("No SD card attached");
+    SD_failure_indicator();
+    return;
+  }
+  Serial.println("Initializing SD card...");
+  if (!SD.begin(SD_CS)) {
+    Serial.println("ERROR - SD card initialization failed!");
+    SD_failure_indicator();
+    return;    // init failed
+  }
+  SD_attached = true;
+  Serial.println("SD-Card attachment successfull");
+
+  fileName = "/data" + String(fileNumber) + ".txt";
+  File file = SD.open(fileName);
+  Serial.println("Starting with data0.txt");
+
+  while(file){
+    file.close();
+    fileNumber = fileNumber + 1;
+    fileName = "/data" + String(fileNumber) + ".txt";
+
+    Serial.println((String)"Trying " + fileName);
+    file = SD.open(fileName);
+  }
+  Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
+  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
+  file.close();
+
+  //Create accompanying configuration file
+  //String configName = "/config/config_for_data" + String(fileNumber) + ".txt";
+  //File file = SD.open(configName);
+  //writeFile(SD,configName.c_str(),"time;Results0;Results1;Results2\r\n");
+
+
+  
+}
+
+void SD_failure_indicator(){
+  digitalWrite(ledR,HIGH);
+  delay(1000);
+  digitalWrite(ledR,LOW);
+  delay(1000);
+  digitalWrite(ledR,HIGH);
+  delay(1000);
+  digitalWrite(ledR,LOW);
+  return;
+}
+
+// Write to the SD card (DON'T MODIFY THIS FUNCTION)
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Writing file: %s\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("File written");
+  } else {
+    Serial.println("Write failed");
+  }
+  file.close();
+}
+
+// Append data to the SD card (DON'T MODIFY THIS FUNCTION)
+void appendFile(fs::FS &fs, const char * path, const char * message) {
+  File file = fs.open(path, FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(!file.print(message)) {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
 void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 
   Serial.println("current config");
@@ -42,6 +149,9 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 
   *pcap_config = pcap.get_config();
   //Reg0 settings
+  pcap_config->I2C_A = i2cAddress;          //Set I2C address to 43
+  pcap_config->OLF_CTUNE = 0x01;            //Set low frequency clock
+  pcap_config->OLF_FTUNE = 0x07;            //Finetune low frequency clock
   //Reg1 settings
   //Reg2 settings
   pcap_config->RDCHG_INT_SEL1 = 0x00;       //Discharge resistors PC4-PC5
@@ -75,7 +185,7 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
   //Reg16 Settings
   pcap_config->FULLCHARGE_TIME =  0x10;     //Time to charge without I_lim
   //Reg17 settings
-  pcap_config->C_REF_SEL = 0;               //Reference capacitances (0 = min, 1 = 1pF ... 31 = 31 pF)
+  pcap_config->C_REF_SEL = refCapacitance;  //Reference capacitances (0 = min, 1 = 1pF ... 31 = 31 pF)
   //Reg18 settings
   pcap_config->C_G_EN = 0b010110;           //Guard enabled for ports
   //Reg19 settings
@@ -113,7 +223,7 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 
 void setup() {
     delay(100);
-    Serial.begin(9600);
+    Serial.begin(115200);
     Serial.println("ESP32 has started, now testing connection to PCAP04");
 
     pinMode(powerLed,OUTPUT);
@@ -126,11 +236,14 @@ void setup() {
     
     delay(100);
 
+    SD_Initialise();
+
     while (CapSensor.test_connection() == false){
         Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
         digitalWrite(ledR,HIGH);
         delay(3000);
     }
+
     digitalWrite(ledR,LOW);
 
     Serial.println("\n Initialising PCAP04");
@@ -138,11 +251,28 @@ void setup() {
 
     CapSensor.init_nvram();
     pcap04_configure_registers(CapSensor, &CapSensorConfig);
+
     CapSensor.initializeIIC();
+
+    Serial.println("Changing address to 43");
+    i2cAddress = 0x03;
+    pcap04_configure_registers(CapSensor, &CapSensorConfig);
+    CapSensor.send_command(CDC_START);
+    CapSensor.update_address(43,3);
+
+    while (CapSensor.test_connection() == false){
+        Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+        digitalWrite(ledR,HIGH);
+        delay(3000);
+    }
+
 
     attachInterrupt(digitalPinToInterrupt(INTN_PG5),pcap_cdc_complete_callback,FALLING);
     
     Serial.println("PCAP04 has been connected and is initialised");
+    if (SD_attached == true){
+      Serial.println("SD-card is detected, printing to serial will be disabled");
+    }
     digitalWrite(ledB, LOW);
     digitalWrite(ledG, HIGH);
     delay(1000);
@@ -197,15 +327,17 @@ void loop() {
         result1 = pcap1_results->C1_over_CREF;
         result2 = pcap1_results->C2_over_CREF;
 
-        // //Print in readable text
-        // Serial.print("Result0: ");Serial.print(result0,9);
-        // Serial.print(", Result1: ");Serial.print(result1,9);
-        // Serial.print(", Result2: ");Serial.println(result2,9);
-
         //Print for Excel
         Serial.print(result0,9);
         Serial.print(",");Serial.print(result1,9);
-        Serial.print(",");Serial.print(result2,9);        
+        Serial.print(",");Serial.print(result2,9);
+
+
+        if(SD_attached == true){
+          //Write to SD
+          dataMessage = String(current_micros) + ";" + String(result0,9) + ";" + String(result1,9) + ";" + String(result2,9) + "\r\n";
+          appendFile(SD, fileName.c_str(), dataMessage.c_str());
+        }
         digitalWrite(ledR, LOW);
     }
 }

@@ -1,6 +1,17 @@
 #ifndef pcap_calibrations_h
 #define pcap_calibrations_h
 
+/*
+Values in config window:
+07333335
+08CCCCCD
+0001
+03FE
+01666666
+02333333
+0001
+03FE
+*/
 #define PCAP04_V1_STD_V0_CALIB_NVRAM_LOC 0x0320
 unsigned char PCap04v1_standard_v1_calibration[24] = {
 0x35, 0x33, 0x33, 0x07, 0xCD, 0xCC, 0xCC, 0x08,\

@@ -24,6 +24,8 @@
 
 unsigned long current_micros = 0;
 
+unsigned char i2cAddress = 0x00;
+
 float result0;
 float result1;
 float result2;
@@ -86,8 +88,14 @@ void SD_Initialise(){
     file = SD.open(fileName);
   }
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time, Results0,Results1,Results2\r\n");
+  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
   file.close();
+
+  //Create accompanying configuration file
+  //String configName = "/config/config_for_data" + String(fileNumber) + ".txt";
+  //File file = SD.open(configName);
+  //writeFile(SD,configName.c_str(),"time;Results0;Results1;Results2\r\n");
+
 
   
 }
@@ -141,6 +149,9 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 
   *pcap_config = pcap.get_config();
   //Reg0 settings
+  pcap_config->I2C_A = i2cAddress;          //Set I2C address to 43
+  pcap_config->OLF_CTUNE = 0x01;            //Set low frequency clock
+  pcap_config->OLF_FTUNE = 0x07;            //Finetune low frequency clock
   //Reg1 settings
   //Reg2 settings
   pcap_config->RDCHG_INT_SEL1 = 0x00;       //Discharge resistors PC4-PC5
@@ -174,7 +185,7 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
   //Reg16 Settings
   pcap_config->FULLCHARGE_TIME =  0x10;     //Time to charge without I_lim
   //Reg17 settings
-  pcap_config->C_REF_SEL = refCapacitance;               //Reference capacitances (0 = min, 1 = 1pF ... 31 = 31 pF)
+  pcap_config->C_REF_SEL = refCapacitance;  //Reference capacitances (0 = min, 1 = 1pF ... 31 = 31 pF)
   //Reg18 settings
   pcap_config->C_G_EN = 0b010110;           //Guard enabled for ports
   //Reg19 settings
@@ -232,6 +243,7 @@ void setup() {
         digitalWrite(ledR,HIGH);
         delay(3000);
     }
+
     digitalWrite(ledR,LOW);
 
     Serial.println("\n Initialising PCAP04");
@@ -239,7 +251,21 @@ void setup() {
 
     CapSensor.init_nvram();
     pcap04_configure_registers(CapSensor, &CapSensorConfig);
+
     CapSensor.initializeIIC();
+
+    Serial.println("Changing address to 43");
+    i2cAddress = 0x03;
+    pcap04_configure_registers(CapSensor, &CapSensorConfig);
+    CapSensor.send_command(CDC_START);
+    CapSensor.update_address(43,3);
+
+    while (CapSensor.test_connection() == false){
+        Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+        digitalWrite(ledR,HIGH);
+        delay(3000);
+    }
+
 
     attachInterrupt(digitalPinToInterrupt(INTN_PG5),pcap_cdc_complete_callback,FALLING);
     
@@ -309,7 +335,7 @@ void loop() {
 
         if(SD_attached == true){
           //Write to SD
-          dataMessage = String(current_micros) + "," + String(result0,9) + "," + String(result1,9) + "," + String(result2,9) + "\r\n";
+          dataMessage = String(current_micros) + ";" + String(result0,9) + ";" + String(result1,9) + ";" + String(result2,9) + "\r\n";
           appendFile(SD, fileName.c_str(), dataMessage.c_str());
         }
         digitalWrite(ledR, LOW);

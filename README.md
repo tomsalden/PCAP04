@@ -77,7 +77,7 @@ In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-
 
 ✅Read data synchronously with PCAP04, as recommended in the datasheet
 
-⬜️Add SD-card to the system to log data
+✅Add SD-card to the system to log data
 
 ⬜Place PCAP04 settings file on SD card
 

@@ -81,7 +81,7 @@ In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-
 
 ⬜Place PCAP04 settings file on SD card
 
-⬜️Create a PCB for this system
+✅Create a PCB for this system
 
 ⬜️Edit PCAP04 settings without reflashing ESP32
 

@@ -62,17 +62,18 @@ For flashing the firmware, the basic Arduino IDE can be used. The board settings
 - Core Debug Level  None
 
 # Using the Set-up
-At this point in time, the set-up only works via the serial monitor. The following will happen at startup:
-1. The ESP32 will startup, displayed with the Power Led
-2. The ESP will test the I2C connection to the PCAP04. If there is a problem, a red light will appear. Otherwise the light turns blue
+At this point in time, the set-up works via the serial monitor and a limited web-interface. The following will happen at startup:
+1. The ESP32 will startup, displayed with the Power Led. Either it will connect to a known network or start its own network.
+2. The ESP32 will test if an SD card is available. It will create a new file for data storage. If the SD-card is not available, the indicator light will flash red three times.
+3. The ESP will test the I2C connection to the PCAP04. If there is a problem, a red light will appear. Otherwise the light turns blue
 3. The ESP will initialise the PCAP04 and write the correct configuration to the chip. Once done, the Led turns green
 4. After initialisation, the PCAP04 will start its measurements. The ESP32 will retreive a new measurement every second, indicated by a flashing red-green light.
-5. The ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
+5. If an SD-card is available, the ESP32 will save the data as in a .csv format on the card. In addition, the ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
 
 Now, the Serial Port of the Arduino IDE can be used to readout the values.
 In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-is-data-streamer-1d52ffce-261c-4d7b-8017-89e8ee2b806f) in Excel can record, process and save live data.
 
-# PCB (will be produced in the future)
+# PCB (Design is finished, will be ordered in the future)
 The PCB has space for three PCAP04 CDC's. Each CDC can readout 4 to 5 capacitances and has 1 reference capacitor to make sure the base value is correct.
 2 Li-Ion batteries will be attached at the back to power the board, 5-9V can be used for powering this device.
 As an alternative, one PCAP04 EVA Board can be used instead of one PCAP04 bare chip.
@@ -85,6 +86,27 @@ The backside of the PCB:
 
 ![](/PCB/PCAP04_Interface/PCB_Back.png)
 
+The PCB design includes the following features:
+- 3 PCAP04 (or older) measurement chips.
+- 1 PCAP04 chip can be replaced with a PCAP04-EVA-BOARD (for testing purposes)
+- 3 on-PCB reference capacitors
+- 15 (grounded) capacitor measurement possibilities
+- Optional offset capacitors can be placed
+<!-- -->
+- 2 lines for piezoresistive readout are added using voltage dividers
+- External resistors can be placed for the voltage division
+<!-- -->
+- ESP32-Wroom to connect to the PCAP04 chips and process the data
+- Micro-SD card holder to save the data
+- Power LED directly connected to power line
+- RGB Led that is controlled by the ESP32
+- 2 multipurpose buttons (start/stop measurements etc.)
+<!-- -->
+- On-off switch breaking the power line
+- Can be powered by 2x Li-Ion 18650 batteries (No protection circuitry, use at own risk! Reverse polarity protection is included)
+- Cam also be powered by 5V USB line in ESP32-wroom
+
+
 
 
 
@@ -95,7 +117,7 @@ The backside of the PCB:
 
 ✅Add SD-card to the system to log data
 
-⬜Place PCAP04 settings file on SD card
+⬜~~Place PCAP04 settings file on SD card~~
 
 ✅Create a PCB for this system
 

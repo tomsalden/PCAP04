@@ -40,6 +40,7 @@ struct webserverControlIDs
 };
 
 extern webserverControlIDs webserverIDs;
+extern PCAP04IIC CapSensor;
 
 void updateFromConfig(){
     //extern webserverControlIDs webserverIDs;
@@ -88,6 +89,20 @@ void selectedPCAP(Control* sender, int value)
     updateFromConfig();
 }
 
+void SelectionCallback(Control* sender, int value)
+{
+    if (sender->id == webserverIDs.MEAS_SCHEME){
+
+    } else if (sender->id == webserverIDs.Rdis_0_3){
+        webserverConfig->RDCHG_INT_SEL0 = sender->value.toInt();
+    } else if (sender->id == webserverIDs.Rdis_4_5){
+        webserverConfig->RDCHG_INT_SEL1 = sender->value.toInt();
+    } else if (sender->id == webserverIDs.Rchr){
+        webserverConfig->RCHG_SEL = sender->value.toInt();
+    } 
+    CapSensor.update_config(webserverConfig);
+}
+
 void numberCall(Control* sender, int type)
 {
     if (sender->id == webserverIDs.t_precharge){
@@ -96,7 +111,10 @@ void numberCall(Control* sender, int type)
         ESPUI.updateLabel(webserverIDs.t_full_label,(String)(sender->value.toInt() * clockPeriod) + "us");
     } else if (sender->id == webserverIDs.t_discharge){
         ESPUI.updateLabel(webserverIDs.t_dis_label,(String)(sender->value.toInt() * clockPeriod) + "us");
+    } else if (sender->id == webserverIDs.CintSelect){
+        webserverConfig->C_REF_SEL = sender->value.toInt();
     }
+    CapSensor.update_config(webserverConfig);
 
     Serial.print("Number: ");
     Serial.println(sender->value);
@@ -123,9 +141,10 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "PCAP 2", "2", ControlColor::Alizarin, webserverIDs.selectPCAP);
     ESPUI.addControl(ControlType::Option, "PCAP 3", "3", ControlColor::Alizarin, webserverIDs.selectPCAP);
 
+
     // Tab1 - CDC Frontend
     // Measurement Scheme
-    webserverIDs.MEAS_SCHEME = ESPUI.addControl(ControlType::Select, "Capacitance Measurement Scheme:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.MEAS_SCHEME = ESPUI.addControl(ControlType::Select, "Capacitance Measurement Scheme:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "Grounded | Single", "0", ControlColor::Alizarin, webserverIDs.MEAS_SCHEME);
     ESPUI.addControl(ControlType::Option, "Grounded | Differential", "2", ControlColor::Alizarin, webserverIDs.MEAS_SCHEME);
     ESPUI.addControl(ControlType::Option, "Floating | Single", "1", ControlColor::Alizarin, webserverIDs.MEAS_SCHEME);
@@ -140,33 +159,33 @@ void setupWebserver(){
     webserverIDs.PORT_SELECT5 = ESPUI.addControl(ControlType::Switcher, "", "5",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample);
 
     //Stray Compensation
-    webserverIDs.StrayCompensation = ESPUI.addControl(ControlType::Select, "Stray Compensation:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.StrayCompensation = ESPUI.addControl(ControlType::Select, "Stray Compensation:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "None", "0", ControlColor::Alizarin, webserverIDs.StrayCompensation);
     ESPUI.addControl(ControlType::Option, "Internal", "1", ControlColor::Alizarin, webserverIDs.StrayCompensation);
     ESPUI.addControl(ControlType::Option, "External", "2", ControlColor::Alizarin, webserverIDs.StrayCompensation);
     ESPUI.addControl(ControlType::Option, "Both", "3", ControlColor::Alizarin, webserverIDs.StrayCompensation);    
 
     //Discharge resistance port 0-3
-    webserverIDs.Rdis_0_3 = ESPUI.addControl(ControlType::Select, "Discharge Resistance Port 0-3:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.Rdis_0_3 = ESPUI.addControl(ControlType::Select, "Discharge Resistance Port 0-3:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "180k", "0", ControlColor::Alizarin, webserverIDs.Rdis_0_3);
     ESPUI.addControl(ControlType::Option, "90k", "1", ControlColor::Alizarin, webserverIDs.Rdis_0_3);
     ESPUI.addControl(ControlType::Option, "30k", "2", ControlColor::Alizarin, webserverIDs.Rdis_0_3);
     ESPUI.addControl(ControlType::Option, "10k", "3", ControlColor::Alizarin, webserverIDs.Rdis_0_3);  
 
     //Discharge resistance port 4-5
-    webserverIDs.Rdis_4_5 = ESPUI.addControl(ControlType::Select, "Discharge Resistance Port 4-5:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.Rdis_4_5 = ESPUI.addControl(ControlType::Select, "Discharge Resistance Port 4-5:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "180k", "0", ControlColor::Alizarin, webserverIDs.Rdis_4_5);
     ESPUI.addControl(ControlType::Option, "90k", "1", ControlColor::Alizarin, webserverIDs.Rdis_4_5);
     ESPUI.addControl(ControlType::Option, "30k", "2", ControlColor::Alizarin, webserverIDs.Rdis_4_5);
     ESPUI.addControl(ControlType::Option, "10k", "3", ControlColor::Alizarin, webserverIDs.Rdis_4_5);
 
     //Charge Resistance
-    webserverIDs.Rchr = ESPUI.addControl(ControlType::Select, "Charge Resistance:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.Rchr = ESPUI.addControl(ControlType::Select, "Charge Resistance:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "10k", "0", ControlColor::Alizarin, webserverIDs.Rchr);
     ESPUI.addControl(ControlType::Option, "180k", "1", ControlColor::Alizarin, webserverIDs.Rchr);
 
     //C Reference Select
-    webserverIDs.Cref = ESPUI.addControl(ControlType::Select, "C Reference Select:", "", ControlColor::Turquoise, tab1, &selectExample);
+    webserverIDs.Cref = ESPUI.addControl(ControlType::Select, "C Reference Select:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
     ESPUI.addControl(ControlType::Option, "External", "0", ControlColor::Alizarin, webserverIDs.Cref);
     ESPUI.addControl(ControlType::Option, "Internal", "1", ControlColor::Alizarin, webserverIDs.Cref);
 

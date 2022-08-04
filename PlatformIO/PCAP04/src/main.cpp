@@ -1,8 +1,9 @@
-//Libraries for PCAP04
-#include "include/pcap04IIC.h"
+#include <Arduino.h>
+#include "pcap04IIC.h"
 #include <Wire.h>
 #include <ArduinoJson.h>
-#include "FeaturesTest/WebserverUI/createWebserver.h"
+#include "createWebserver.h"
+#include "supportingFunctions.h"
 
 //Libraries for SD card
 #include <SPI.h>
@@ -65,59 +66,7 @@ pcap_config_handler_t metsensor_pcap_config_handler;
 pcap_results_t* pcap1_results;
 pcap_status_t* pcap1_status;
 
-PCAP04IIC CapSensor(version,measurement,address,CapSensorConfig);
-
-void pcap_cdc_complete_callback(){
-  CapSensor.cdc_complete_flag = true;
-}
-
-void SD_Initialise(){
-  Serial.println("Mounting SD-Card");
-  SD.begin(SD_CS);
-  if(!SD.begin(SD_CS)){
-    Serial.println("Card mount failed");
-    SD_failure_indicator();
-    return;
-  }
-  uint8_t cardType = SD.cardType();
-  if(cardType == CARD_NONE) {
-    Serial.println("No SD card attached");
-    SD_failure_indicator();
-    return;
-  }
-  Serial.println("Initializing SD card...");
-  if (!SD.begin(SD_CS)) {
-    Serial.println("ERROR - SD card initialization failed!");
-    SD_failure_indicator();
-    return;    // init failed
-  }
-  SD_attached = true;
-  Serial.println("SD-Card attachment successfull");
-
-  fileName = "/data" + String(fileNumber) + ".txt";
-  File file = SD.open(fileName);
-  Serial.println("Starting with data0.txt");
-
-  while(file){
-    file.close();
-    fileNumber = fileNumber + 1;
-    fileName = "/data" + String(fileNumber) + ".txt";
-
-    Serial.println((String)"Trying " + fileName);
-    file = SD.open(fileName);
-  }
-  Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
-  file.close();
-
-  //Create accompanying configuration file
-  //String configName = "/config/config_for_data" + String(fileNumber) + ".txt";
-  //File file = SD.open(configName);
-  //writeFile(SD,configName.c_str(),"time;Results0;Results1;Results2\r\n");
-
-
-  
-}
+PCAP04IIC CapSensor(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,address,CapSensorConfig);
 
 void SD_failure_indicator(){
   digitalWrite(ledR,HIGH);
@@ -160,85 +109,47 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
   file.close();
 }
 
-void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
+void SD_Initialise(){
+  Serial.println("Mounting SD-Card");
+  SD.begin(SD_CS);
+  if(!SD.begin(SD_CS)){
+    Serial.println("Card mount failed");
+    SD_failure_indicator();
+    return;
+  }
+  uint8_t cardType = SD.cardType();
+  if(cardType == CARD_NONE) {
+    Serial.println("No SD card attached");
+    SD_failure_indicator();
+    return;
+  }
+  Serial.println("Initializing SD card...");
+  if (!SD.begin(SD_CS)) {
+    Serial.println("ERROR - SD card initialization failed!");
+    SD_failure_indicator();
+    return;    // init failed
+  }
+  SD_attached = true;
+  Serial.println("SD-Card attachment successfull");
 
-  Serial.println("current config");
-  
-  pcap.print_config();
+  fileName = "/data" + String(fileNumber) + ".txt";
+  File file = SD.open(fileName);
+  Serial.println("Starting with data0.txt");
 
-  *pcap_config = pcap.get_config();
-  //Reg0 settings
-  pcap_config->I2C_A = i2cAddress;          //Set I2C address to 43
-  pcap_config->OLF_CTUNE = 0x01;            //Set low frequency clock
-  pcap_config->OLF_FTUNE = 0x07;            //Finetune low frequency clock
-  //Reg1 settings
-  //Reg2 settings
-  pcap_config->RDCHG_INT_SEL1 = 0x00;       //Discharge resistors PC4-PC5
-  pcap_config->RDCHG_INT_SEL0 = 0x00;       //Discharge resistors PC0-3 plus PC6
-  pcap_config->RDCHG_INT_EN = 0x01;         //Enable internal discharge resistors
-  //Reg3 settings
-  pcap_config->RCHG_SEL = 0x00;             //Charging resistors to limit charging
-  //Reg4 settings
-  pcap_config->C_REF_INT = 0x01;            //Use the internal reference
-  pcap_config->C_COMP_EXT = 0x01;           //External cap compensation (DISABLE FOR NON FLOATING CAPS)
-  pcap_config->C_COMP_INT = 0b1;            //Internal cap compensation
-  pcap_config->C_DIFFERENTIAL = 0x00;       //No differential caps
-  pcap_config->C_FLOATING = 0x01;           //Floating caps
-  //Reg5 settings
-  pcap_config->CY_HFCLK_SEL = 0x00;         //Low frequency clock (50 kHz)
-  //Reg6 settings
-  pcap_config->C_PORT_EN = 0x3F;
-  //Reg7:8 settings
-  pcap_config->C_AVRG = 0x0d;               //Samples to take average from
-  //Reg11:9
-  pcap_config->CONV_TIME = 0x2710;          //Conversion time (10000)
-  //Reg12 settings
-  pcap_config->DISCHARGE_TIME = 0x10;       //Discharge time (x*50 kHz)
-  //Reg13 settings
-  pcap_config->C_STARTONPIN = 0x02;         //Pin that triggers a CDC measurement (only if trig enabled)
-  pcap_config->C_TRIG_SEL = 0x02;           //Timer triggered reading
-  //Reg14 settings
-  pcap_config->PRECHARGE_TIME = 0x10;       //Precharge time (x*50 kHz)
-  //Reg15 settings
-  pcap_config->C_FAKE = 0x04;               //Number of "fake" or "warm-up" measurements before "real"
-  //Reg16 Settings
-  pcap_config->FULLCHARGE_TIME =  0x10;     //Time to charge without I_lim
-  //Reg17 settings
-  pcap_config->C_REF_SEL = refCapacitance;  //Reference capacitances (0 = min, 1 = 1pF ... 31 = 31 pF)
-  //Reg18 settings
-  pcap_config->C_G_EN = 0b010110;           //Guard enabled for ports
-  //Reg19 settings
-  pcap_config->C_G_OP_VU = 0;               //Gain for the guard (0 = 1.00, 3 = 1.03)
-  //Reg20 settings
-  pcap_config->C_G_OP_TR = 7;               //Guard OP current trim
-  //Reg21 settings
-  pcap_config->R_TRIG_PREDIV = 0x0a;
-  //Reg22 settings
-  pcap_config->R_TRIG_SEL = 0x05;           //Trigger for RDC. 5 = asynchronous at end of CDC
-  pcap_config->R_AVRG = 0x00;               //Sample size for mean value
-  //Reg23 settings
-  pcap_config->R_PORT_EN = 0b00;            //Activate R_PORTS, bit0 = PT0REF, bit1 = PT1
-  pcap_config->R_PORT_EN_IMES = 0b1;        //Activate internal aluminium temp sensor
-  pcap_config->R_PORT_EN_IREF = 0b1;        //Activate internal reference resistor
-  pcap_config->R_FAKE = 0x00;               //Number of "fake" or "warm-up" measurements before "real"
-  //Reg24, 25, 26 settings (Mandatory bits)
-  //Reg27-29 settings
-  //Reg30 settings
-  pcap_config->PG5_INTN_EN = true;          //Route INTN signal to PG5
-  //Reg35 settings
-  pcap_config->CDC_GAIN_CORR = 0x40;        //Firmware defined gain correlation factor
-  //Reg29 settings
+  while(file){
+    file.close();
+    fileNumber = fileNumber + 1;
+    fileName = "/data" + String(fileNumber) + ".txt";
 
-  //Reg42 settings
-  pcap_config->EN_ASYNC_READ = 0;           //Enable Synchronised read (Update results based on pin interrupt)
-
-
-  pcap.update_config(pcap_config);
-
-  Serial.println("updated config");
-  pcap.print_config();
-
+    Serial.println((String)"Trying " + fileName);
+    file = SD.open(fileName);
+  }
+  Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
+  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
+  file.close();
 }
+
+
 
 void setup() {
     delay(100);

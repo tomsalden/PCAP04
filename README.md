@@ -101,6 +101,7 @@ The PCB design includes the following features:
 - Power LED directly connected to power line
 - RGB Led that is controlled by the ESP32
 - 2 multipurpose buttons (start/stop measurements etc.)
+- Temperature sensor to keep track of ambient temperature
 <!-- -->
 - On-off switch breaking the power line
 - Can be powered by 2x Li-Ion 18650 batteries (No protection circuitry, use at own risk! Reverse polarity protection is included)

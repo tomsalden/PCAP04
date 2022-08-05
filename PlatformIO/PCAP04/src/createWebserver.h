@@ -5,11 +5,20 @@
 #include "supportingFunctions.h"
 
 int currentPCAP = 1;
-int clockPeriod = 20;
+float clockPeriod = 20;
 pcap_config_t* webserverConfig;
+extern pcap_config_t CapSensorConfig;
 
 struct webserverControlIDs
 {
+    uint16_t webResult0;
+    uint16_t webResult1;
+    uint16_t webResult2;
+    
+    uint16_t medianResult0;
+    uint16_t medianResult1;
+    uint16_t medianResult2;
+
     uint16_t STATUS;
     uint16_t selectPCAP;
     uint16_t MEAS_SCHEME;
@@ -44,7 +53,6 @@ extern PCAP04IIC CapSensor;
 
 void updateFromConfig(){
     //extern webserverControlIDs webserverIDs;
-    extern pcap_config_t CapSensorConfig;
     extern pcap_config_t Config_PCAP_2;
     extern pcap_config_t Config_PCAP_3;
 
@@ -69,6 +77,7 @@ void updateFromConfig(){
     ESPUI.updateSelect(webserverIDs.Rchr,(String)(webserverConfig->RCHG_SEL));
     ESPUI.updateSelect(webserverIDs.Cref,(String)(webserverConfig->C_REF_INT));
     ESPUI.updateNumber(webserverIDs.CintSelect,webserverConfig->C_REF_SEL);
+    ESPUI.updateSelect(webserverIDs.clockcycleselect,(String)(webserverConfig->CY_HFCLK_SEL<<1 | webserverConfig->CY_DIV4_DIS));
 
 }
 
@@ -92,32 +101,81 @@ void selectedPCAP(Control* sender, int value)
 void SelectionCallback(Control* sender, int value)
 {
     if (sender->id == webserverIDs.MEAS_SCHEME){
-
+        webserverConfig->C_DIFFERENTIAL = ((sender->value.toInt() >> 1) & 1);
+        webserverConfig->C_FLOATING = (sender->value.toInt() & 1);
+    } else if (sender->id == webserverIDs.StrayCompensation){
+        webserverConfig->C_COMP_EXT = ((sender->value.toInt() >> 1) & 1);
+        webserverConfig->C_COMP_INT = (sender->value.toInt() & 1);        
     } else if (sender->id == webserverIDs.Rdis_0_3){
         webserverConfig->RDCHG_INT_SEL0 = sender->value.toInt();
     } else if (sender->id == webserverIDs.Rdis_4_5){
         webserverConfig->RDCHG_INT_SEL1 = sender->value.toInt();
     } else if (sender->id == webserverIDs.Rchr){
         webserverConfig->RCHG_SEL = sender->value.toInt();
-    } 
+    } else if (sender->id == webserverIDs.Cref){
+        webserverConfig->C_REF_INT = sender->value.toInt();
+    } else if (sender->id == webserverIDs.clockcycleselect){
+        webserverConfig->CY_HFCLK_SEL = ((sender->value.toInt() >> 1) & 1);
+        webserverConfig->CY_DIV4_DIS = (sender->value.toInt() & 1);
+        if (sender->value.toInt() == 0){
+            clockPeriod = 200;
+        } else if (sender->value.toInt() == 2){
+            clockPeriod = 20;
+        } else if (sender->value.toInt() == 3){
+            clockPeriod = 5;
+        }
+    }
     CapSensor.update_config(webserverConfig);
+    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
 }
 
 void numberCall(Control* sender, int type)
 {
     if (sender->id == webserverIDs.t_precharge){
-        ESPUI.updateLabel(webserverIDs.t_pre_label,(String)(sender->value.toInt() * clockPeriod) + "us");
+        ESPUI.updateLabel(webserverIDs.t_pre_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
     } else if (sender->id == webserverIDs.t_fullcharge){
-        ESPUI.updateLabel(webserverIDs.t_full_label,(String)(sender->value.toInt() * clockPeriod) + "us");
+        ESPUI.updateLabel(webserverIDs.t_full_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
     } else if (sender->id == webserverIDs.t_discharge){
-        ESPUI.updateLabel(webserverIDs.t_dis_label,(String)(sender->value.toInt() * clockPeriod) + "us");
+        ESPUI.updateLabel(webserverIDs.t_dis_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
     } else if (sender->id == webserverIDs.CintSelect){
         webserverConfig->C_REF_SEL = sender->value.toInt();
     }
     CapSensor.update_config(webserverConfig);
+    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
 
     Serial.print("Number: ");
     Serial.println(sender->value);
+}
+
+void switchCallback(Control* sender, int value)
+{
+    bool portChange = false;
+    int switchId = 0;
+    if (sender->id == webserverIDs.PORT_SELECT0){
+        switchId = 0;
+        portChange = true;
+    } else if (sender->id == webserverIDs.PORT_SELECT1){
+        switchId = 1;
+        portChange = true;
+    } else if (sender->id == webserverIDs.PORT_SELECT2){
+        switchId = 2;
+        portChange = true;
+    } else if (sender->id == webserverIDs.PORT_SELECT3){
+        switchId = 3;
+        portChange = true;
+    } else if (sender->id == webserverIDs.PORT_SELECT4){
+        switchId = 4;
+        portChange = true;
+    } else if (sender->id == webserverIDs.PORT_SELECT5){
+        switchId = 5;
+        portChange = true;
+    }
+    
+    if (portChange == true){
+        webserverConfig->C_PORT_EN = (webserverConfig->C_PORT_EN & (~(1<<switchId)) | (sender->value.toInt() << switchId));
+    }
+    CapSensor.update_config(webserverConfig);
+    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
 }
 
 
@@ -141,6 +199,15 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "PCAP 2", "2", ControlColor::Alizarin, webserverIDs.selectPCAP);
     ESPUI.addControl(ControlType::Option, "PCAP 3", "3", ControlColor::Alizarin, webserverIDs.selectPCAP);
 
+    // Tab0 - Status
+    webserverIDs.webResult0 = ESPUI.addControl(ControlType::Label, "Result 0","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult1 = ESPUI.addControl(ControlType::Label, "Result 1","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult2 = ESPUI.addControl(ControlType::Label, "Result 2","No data",ControlColor::Turquoise, tab0);
+
+    webserverIDs.medianResult0 = ESPUI.addControl(ControlType::Label, "Median result 0","No data",ControlColor::Turquoise, webserverIDs.webResult0);
+    webserverIDs.medianResult1 = ESPUI.addControl(ControlType::Label, "Median result 1","No data",ControlColor::Turquoise, webserverIDs.webResult1);
+    webserverIDs.medianResult2 = ESPUI.addControl(ControlType::Label, "Median result 2","No data",ControlColor::Turquoise, webserverIDs.webResult2);
+
 
     // Tab1 - CDC Frontend
     // Measurement Scheme
@@ -151,12 +218,12 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "Floating | Differential", "3", ControlColor::Alizarin, webserverIDs.MEAS_SCHEME);
 
     //Port Select
-    webserverIDs.PORT_SELECT0 = ESPUI.addControl(ControlType::Switcher, "Cap. Port Select", "0",ControlColor::Turquoise,tab1, &switchExample);
-    webserverIDs.PORT_SELECT1 = ESPUI.addControl(ControlType::Switcher, "", "1",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample); 
-    webserverIDs.PORT_SELECT2 = ESPUI.addControl(ControlType::Switcher, "", "2",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample); 
-    webserverIDs.PORT_SELECT3 = ESPUI.addControl(ControlType::Switcher, "", "3",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample);
-    webserverIDs.PORT_SELECT4 = ESPUI.addControl(ControlType::Switcher, "", "4",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample); 
-    webserverIDs.PORT_SELECT5 = ESPUI.addControl(ControlType::Switcher, "", "5",ControlColor::None,webserverIDs.PORT_SELECT0, &switchExample);
+    webserverIDs.PORT_SELECT0 = ESPUI.addControl(ControlType::Switcher, "Cap. Port Select", "0",ControlColor::Turquoise,tab1, &switchCallback);
+    webserverIDs.PORT_SELECT1 = ESPUI.addControl(ControlType::Switcher, "", "1",ControlColor::None,webserverIDs.PORT_SELECT0, &switchCallback); 
+    webserverIDs.PORT_SELECT2 = ESPUI.addControl(ControlType::Switcher, "", "2",ControlColor::None,webserverIDs.PORT_SELECT0, &switchCallback); 
+    webserverIDs.PORT_SELECT3 = ESPUI.addControl(ControlType::Switcher, "", "3",ControlColor::None,webserverIDs.PORT_SELECT0, &switchCallback);
+    webserverIDs.PORT_SELECT4 = ESPUI.addControl(ControlType::Switcher, "", "4",ControlColor::None,webserverIDs.PORT_SELECT0, &switchCallback); 
+    webserverIDs.PORT_SELECT5 = ESPUI.addControl(ControlType::Switcher, "", "5",ControlColor::None,webserverIDs.PORT_SELECT0, &switchCallback);
 
     //Stray Compensation
     webserverIDs.StrayCompensation = ESPUI.addControl(ControlType::Select, "Stray Compensation:", "", ControlColor::Turquoise, tab1, &SelectionCallback);
@@ -193,13 +260,19 @@ void setupWebserver(){
 
     //Tab 2
     
-    //Precharge Time
+    //Timings
     webserverIDs.t_precharge = ESPUI.addControl(ControlType::Number, "Precharge time (x clock cycle):", "0", ControlColor::Peterriver, tab2, &numberCall);
     webserverIDs.t_fullcharge = ESPUI.addControl(ControlType::Number, "Fullcharge time (x clock cycle):", "0", ControlColor::Peterriver, tab2, &numberCall);
     webserverIDs.t_discharge = ESPUI.addControl(ControlType::Number, "Discharge time (x clock cycle):", "0", ControlColor::Peterriver, tab2, &numberCall);
     webserverIDs.t_pre_label = ESPUI.addControl(ControlType::Label, "","usec",ControlColor::None, webserverIDs.t_precharge);
     webserverIDs.t_full_label = ESPUI.addControl(ControlType::Label, "","usec",ControlColor::None, webserverIDs.t_fullcharge);
     webserverIDs.t_dis_label = ESPUI.addControl(ControlType::Label, "","usec",ControlColor::None, webserverIDs.t_discharge);
+
+    //Clock select
+    webserverIDs.clockcycleselect = ESPUI.addControl(ControlType::Select, "Cycle clock select:", "", ControlColor::Turquoise, tab2, &SelectionCallback);
+    ESPUI.addControl(ControlType::Option, "50 kHz | OLF", "0", ControlColor::Alizarin, webserverIDs.clockcycleselect);
+    ESPUI.addControl(ControlType::Option, "500 kHz | OHF/4", "2", ControlColor::Alizarin, webserverIDs.clockcycleselect);
+    ESPUI.addControl(ControlType::Option, "2000 kHz | OHF", "3", ControlColor::Alizarin, webserverIDs.clockcycleselect);
 
 
     updateFromConfig();

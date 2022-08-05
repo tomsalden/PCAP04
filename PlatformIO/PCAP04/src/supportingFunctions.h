@@ -5,6 +5,9 @@
 #include <DNSServer.h>
 #include <WiFi.h>
 #include "createWebserver.h"
+#include <SPI.h>
+#include "FS.h"
+#include "SD.h"
 
 extern PCAP04IIC CapSensor;
 extern bool SD_attached;
@@ -76,6 +79,42 @@ void setupConnection(){
     Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
     Serial.print("IP address: ");
     Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
+}
+
+void writeConfigtoSD(char* configname,pcap_config_t config){
+  if (SD_attached == false){//Don't write anything if there is no SD card attached
+    return;
+  }
+  Serial.println("Writing configuration to SD card");
+  File configfile = SD.open(configname,FILE_WRITE);
+  if ( !configfile.seek(0) ){
+    Serial.print("Unable to set seek: ");
+    return;
+  }
+  byte *buff = (byte *) &config;
+  byte count = configfile.write( buff, sizeof ( pcap_config_t ));
+  if (count != sizeof ( pcap_config_t )){
+    Serial.println("Unable to write the struct block to the file.");
+    Serial.print( count, DEC);
+    Serial.println(" bytes written");
+  }
+  configfile.close();
+}
+
+float medianOrder(float array[], int order)
+{
+    for (int i = 0; i < order-1; i++){
+        int countLower = 0;
+        for (int j = 0; j < order-1; j++){
+        if (array[i] > array[j]){
+            countLower++;
+        }
+        }
+        if (countLower == order/2){
+        return array[i];
+        }
+    }
+    return 0;
 }
 
 void textCall(Control* sender, int type)

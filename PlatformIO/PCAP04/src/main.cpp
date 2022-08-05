@@ -10,6 +10,9 @@
 #include "FS.h"
 #include "SD.h"
 
+//Use EEPROM to save the configurations between power cycles
+#include <EEPROM.h>
+
 #include <DNSServer.h>
 #include <WiFi.h>
 
@@ -35,12 +38,21 @@ const char* password = "1234567890";
 const char* hostname = "espui";
 
 unsigned long current_micros = 0;
+unsigned long previous_micros = 0;
+unsigned long webTimeout = 1000000;
 
 unsigned char i2cAddress = 0x00;
 
-float result0;
-float result1;
-float result2;
+int resultIndex = 0;
+float result0[9];
+float result1[9];
+float result2[9];
+
+int medianIndex = 0;
+float medianResult0[3];
+float medianResult1[3];
+float medianResult2[3];
+
 
 bool SD_attached = false;
 String fileName = "";
@@ -149,7 +161,37 @@ void SD_Initialise(){
   file.close();
 }
 
+void readConfigfromSD(char* configname, pcap_config_t config){
+  if (SD_attached == false){ //Don't read anything if there is no SD card attached
+    return;
+  }
 
+  Serial.println("Read configuration from SD card, if file exits. Otherwise create new config file");
+
+  //If the file does not exist, create a new one and write the basic configuration on it
+  File configfile = SD.open(configname,FILE_READ);
+  if ( !configfile ){
+    configfile.close();
+    Serial.println("File does not exist, creating file...");
+    writeFile(SD,configname,"");
+    writeConfigtoSD(configname,config); //Write the basic config in the file
+    //return;
+    configfile = SD.open(configname,FILE_READ);
+  }
+
+  byte *buff = (byte *) &config;
+  byte count = 0;
+  for (count = 0; count < sizeof( pcap_config_t ); count++){
+    if (configfile.available()){
+      *( buff + count ) = configfile.read();
+    } else{
+    Serial.println("Unable to read the struct block to the file.");
+    Serial.print( count, DEC);
+    Serial.println(" bytes read");
+    }
+  }
+  configfile.close();
+}
 
 void setup() {
     delay(100);
@@ -215,6 +257,7 @@ void setup() {
     delay(1000);
     CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
+    readConfigfromSD("/configPCAP0.txt",CapSensorConfig);
     updateFromConfig();
     return;
 }
@@ -262,20 +305,49 @@ void loop() {
         results_json.clear();
 
         //Print results so they can be plotted
-        result0 = pcap1_results->C0_over_CREF;
-        result1 = pcap1_results->C1_over_CREF;
-        result2 = pcap1_results->C2_over_CREF;
+        result0[resultIndex] = pcap1_results->C0_over_CREF;
+        result1[resultIndex] = pcap1_results->C1_over_CREF;
+        result2[resultIndex] = pcap1_results->C2_over_CREF;
+
 
         //Print for Excel
-        Serial.print(result0,9);
-        Serial.print(",");Serial.print(result1,9);
-        Serial.print(",");Serial.print(result2,9);
+        Serial.print(result0[resultIndex],9);
+        Serial.print(",");Serial.print(result1[resultIndex],9);
+        Serial.print(",");Serial.print(result2[resultIndex],9);
 
 
         if(SD_attached == true){
           //Write to SD
-          dataMessage = String(current_micros) + ";" + String(result0,9) + ";" + String(result1,9) + ";" + String(result2,9) + "\r\n";
+          dataMessage = String(current_micros) + ";" + String(result0[resultIndex],9) + ";" + String(result1[resultIndex],9) + ";" + String(result2[resultIndex],9) + "\r\n";
           appendFile(SD, fileName.c_str(), dataMessage.c_str());
+        }
+
+        if (current_micros > previous_micros + webTimeout){
+          //Set web interface
+          ESPUI.updateLabel(webserverIDs.webResult0,String(result0[resultIndex],9));
+          ESPUI.updateLabel(webserverIDs.webResult1,String(result1[resultIndex],9));
+          ESPUI.updateLabel(webserverIDs.webResult2,String(result2[resultIndex],9));
+
+          //Filter the result with a median filter
+          medianResult0[medianIndex] = medianOrder(result0,9);
+          medianResult1[medianIndex] = medianOrder(result1,9);
+          medianResult2[medianIndex] = medianOrder(result2,9);
+
+          ESPUI.updateLabel(webserverIDs.medianResult0,String((medianResult0[0]+medianResult0[1]+medianResult0[2])/3,9));
+          ESPUI.updateLabel(webserverIDs.medianResult1,String((medianResult1[0]+medianResult1[1]+medianResult1[2])/3,9));
+          ESPUI.updateLabel(webserverIDs.medianResult2,String((medianResult2[0]+medianResult2[1]+medianResult2[2])/3,9));
+
+          medianIndex = medianIndex + 1;
+          if (medianIndex > 2){
+            medianIndex = 0;
+          }
+          previous_micros = current_micros;
+        }
+
+
+        resultIndex = resultIndex + 1;
+        if (resultIndex > 8){
+          resultIndex = 0;
         }
         digitalWrite(ledR, LOW);
     }

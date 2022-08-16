@@ -162,6 +162,7 @@ void SD_Initialise(){
 }
 
 void readConfigfromSD(char* configname, pcap_config_t config){
+  //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
   if (SD_attached == false){ //Don't read anything if there is no SD card attached
     return;
   }
@@ -179,17 +180,20 @@ void readConfigfromSD(char* configname, pcap_config_t config){
     configfile = SD.open(configname,FILE_READ);
   }
 
-  byte *buff = (byte *) &config;
-  byte count = 0;
-  for (count = 0; count < sizeof( pcap_config_t ); count++){
-    if (configfile.available()){
-      *( buff + count ) = configfile.read();
-    } else{
-    Serial.println("Unable to read the struct block to the file.");
-    Serial.print( count, DEC);
-    Serial.println(" bytes read");
-    }
-  }
+  // byte *buff = (byte *) &config;
+  // byte count = 0;
+  // for (count = 0; count < sizeof( pcap_config_t ); count++){
+  //   if (configfile.available()){
+  //     *( buff + count ) = configfile.read();
+  //   } else{
+  //   Serial.println("Unable to read the struct block to the file.");
+  //   Serial.print( count, DEC);
+  //   Serial.println(" bytes read");
+  //   }
+  // }
+
+  configfile.read((uint8_t *)&config, sizeof(config)/sizeof(uint8_t));
+
   configfile.close();
 }
 
@@ -258,6 +262,9 @@ void setup() {
     CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
     readConfigfromSD("/configPCAP0.txt",CapSensorConfig);
+    Serial.println("current config");
+    CapSensor.update_config(&CapSensorConfig);
+    CapSensor.print_config();
     updateFromConfig();
     return;
 }

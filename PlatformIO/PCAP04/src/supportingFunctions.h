@@ -91,13 +91,14 @@ void writeConfigtoSD(char* configname,pcap_config_t config){
     Serial.print("Unable to set seek: ");
     return;
   }
-  byte *buff = (byte *) &config;
-  byte count = configfile.write( buff, sizeof ( pcap_config_t ));
-  if (count != sizeof ( pcap_config_t )){
-    Serial.println("Unable to write the struct block to the file.");
-    Serial.print( count, DEC);
-    Serial.println(" bytes written");
-  }
+//   byte *buff = (byte *) &config;
+//   byte count = configfile.write( buff, sizeof ( pcap_config_t ));
+//   if (count != sizeof ( pcap_config_t )){
+//     Serial.println("Unable to write the struct block to the file.");
+//     Serial.print( count, DEC);
+//     Serial.println(" bytes written");
+//   }
+  configfile.write((uint8_t *)&config, sizeof(config));
   configfile.close();
 }
 
@@ -263,8 +264,6 @@ void otherSwitchExample(Control* sender, int value)
 void pcap_cdc_complete_callback(){
   CapSensor.cdc_complete_flag = true;
 }
-
-
 
 void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 

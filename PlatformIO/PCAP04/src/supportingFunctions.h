@@ -81,7 +81,37 @@ void setupConnection(){
     Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
 }
 
-void writeConfigtoSD(char* configname,pcap_config_t config){
+// Write to the SD card (DON'T MODIFY THIS FUNCTION)
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Writing file: %s\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("File written");
+  } else {
+    Serial.println("Write failed");
+  }
+  file.close();
+}
+
+// Append data to the SD card (DON'T MODIFY THIS FUNCTION)
+void appendFile(fs::FS &fs, const char * path, const char * message) {
+  File file = fs.open(path, FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(!file.print(message)) {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+void writeConfigtoSD(char* configname,pcap_config_t * config){
   if (SD_attached == false){//Don't write anything if there is no SD card attached
     return;
   }
@@ -91,15 +121,25 @@ void writeConfigtoSD(char* configname,pcap_config_t config){
     Serial.print("Unable to set seek: ");
     return;
   }
-//   byte *buff = (byte *) &config;
-//   byte count = configfile.write( buff, sizeof ( pcap_config_t ));
-//   if (count != sizeof ( pcap_config_t )){
-//     Serial.println("Unable to write the struct block to the file.");
-//     Serial.print( count, DEC);
-//     Serial.println(" bytes written");
-//   }
-  configfile.write((uint8_t *)&config, sizeof(config));
   configfile.close();
+
+  String dataMessage = "Configurationfile for PCAP04\r\n";
+  writeFile(SD, configname, dataMessage.c_str());
+
+  dataMessage = 
+  String(config->C_DIFFERENTIAL)   + "\r\n" + 
+  String(config->C_FLOATING)       + "\r\n" +
+  String(config->C_PORT_EN)        + "\r\n" +
+  String(config->C_COMP_EXT)       + "\r\n" +
+  String(config->RDCHG_INT_SEL0)   + "\r\n" +
+  String(config->RDCHG_INT_SEL1)   + "\r\n" +
+  String(config->RCHG_SEL)         + "\r\n" +
+  String(config->C_REF_INT)        + "\r\n" +
+  String(config->C_REF_SEL)        + "\r\n" +
+  String(config->CY_HFCLK_SEL)     + "\r\n" +
+  String(config->CY_DIV4_DIS)      + "\r\n";
+  
+  appendFile(SD, configname, dataMessage.c_str());
 }
 
 float medianOrder(float array[], int order)

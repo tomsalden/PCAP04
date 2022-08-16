@@ -91,35 +91,6 @@ void SD_failure_indicator(){
   return;
 }
 
-// Write to the SD card (DON'T MODIFY THIS FUNCTION)
-void writeFile(fs::FS &fs, const char * path, const char * message) {
-  Serial.printf("Writing file: %s\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
-  if(!file) {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if(file.print(message)) {
-    Serial.println("File written");
-  } else {
-    Serial.println("Write failed");
-  }
-  file.close();
-}
-
-// Append data to the SD card (DON'T MODIFY THIS FUNCTION)
-void appendFile(fs::FS &fs, const char * path, const char * message) {
-  File file = fs.open(path, FILE_APPEND);
-  if(!file) {
-    Serial.println("Failed to open file for appending");
-    return;
-  }
-  if(!file.print(message)) {
-    Serial.println("Append failed");
-  }
-  file.close();
-}
 
 void SD_Initialise(){
   Serial.println("Mounting SD-Card");
@@ -161,7 +132,7 @@ void SD_Initialise(){
   file.close();
 }
 
-void readConfigfromSD(char* configname, pcap_config_t config){
+void readConfigfromSD(char* configname, pcap_config_t *config){
   //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
   if (SD_attached == false){ //Don't read anything if there is no SD card attached
     return;
@@ -179,20 +150,21 @@ void readConfigfromSD(char* configname, pcap_config_t config){
     //return;
     configfile = SD.open(configname,FILE_READ);
   }
-
-  // byte *buff = (byte *) &config;
-  // byte count = 0;
-  // for (count = 0; count < sizeof( pcap_config_t ); count++){
-  //   if (configfile.available()){
-  //     *( buff + count ) = configfile.read();
-  //   } else{
-  //   Serial.println("Unable to read the struct block to the file.");
-  //   Serial.print( count, DEC);
-  //   Serial.println(" bytes read");
-  //   }
-  // }
-
-  configfile.read((uint8_t *)&config, sizeof(config)/sizeof(uint8_t));
+  String buffer;
+  //Read first line
+  buffer = configfile.readStringUntil('\r\n');
+  //Read config lines:
+  config->C_DIFFERENTIAL = configfile.readStringUntil('\r\n').toInt();
+  config->C_FLOATING = configfile.readStringUntil('\r\n').toInt();
+  config->C_PORT_EN = configfile.readStringUntil('\r\n').toInt();
+  config->C_COMP_EXT = configfile.readStringUntil('\r\n').toInt();
+  config->RDCHG_INT_SEL0 = configfile.readStringUntil('\r\n').toInt();
+  config->RDCHG_INT_SEL1 = configfile.readStringUntil('\r\n').toInt();
+  config->RCHG_SEL = configfile.readStringUntil('\r\n').toInt();
+  config->C_REF_INT = configfile.readStringUntil('\r\n').toInt();
+  config->C_REF_SEL = configfile.readStringUntil('\r\n').toInt();
+  config->CY_HFCLK_SEL = configfile.readStringUntil('\r\n').toInt();
+  config->CY_DIV4_DIS = configfile.readStringUntil('\r\n').toInt();
 
   configfile.close();
 }
@@ -261,7 +233,7 @@ void setup() {
     delay(1000);
     CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
-    readConfigfromSD("/configPCAP0.txt",CapSensorConfig);
+    readConfigfromSD("/configPCAP0.txt",&CapSensorConfig);
     Serial.println("current config");
     CapSensor.update_config(&CapSensorConfig);
     CapSensor.print_config();

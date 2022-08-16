@@ -126,7 +126,7 @@ void SelectionCallback(Control* sender, int value)
         }
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
+    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
 }
 
 void numberCall(Control* sender, int type)
@@ -141,7 +141,7 @@ void numberCall(Control* sender, int type)
         webserverConfig->C_REF_SEL = sender->value.toInt();
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
+    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
 
     Serial.print("Number: ");
     Serial.println(sender->value);
@@ -175,7 +175,7 @@ void switchCallback(Control* sender, int value)
         webserverConfig->C_PORT_EN = (webserverConfig->C_PORT_EN & (~(1<<switchId)) | (sender->value.toInt() << switchId));
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",CapSensorConfig);
+    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
 }
 
 

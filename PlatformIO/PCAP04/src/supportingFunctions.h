@@ -137,7 +137,9 @@ void writeConfigtoSD(char* configname,pcap_config_t * config){
   String(config->C_REF_INT)        + "\r\n" +
   String(config->C_REF_SEL)        + "\r\n" +
   String(config->CY_HFCLK_SEL)     + "\r\n" +
-  String(config->CY_DIV4_DIS)      + "\r\n";
+  String(config->CY_DIV4_DIS)      + "\r\n" + 
+  String(config->C_FAKE)           + "\r\n" +
+  String(config->C_AVRG)           + "\r\n" ;
   
   appendFile(SD, configname, dataMessage.c_str());
 }

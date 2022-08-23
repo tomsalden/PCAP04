@@ -21,6 +21,8 @@ struct webserverControlIDs
 
     uint16_t STATUS;
     uint16_t selectPCAP;
+
+    //Tab1
     uint16_t MEAS_SCHEME;
 
     uint16_t PORT_SELECT0;
@@ -39,6 +41,7 @@ struct webserverControlIDs
     uint16_t Cref;
     uint16_t CintSelect;
 
+    //Tab2
     uint16_t t_precharge;
     uint16_t t_fullcharge;
     uint16_t t_discharge;
@@ -46,6 +49,9 @@ struct webserverControlIDs
     uint16_t t_full_label;
     uint16_t t_dis_label;
     uint16_t clockcycleselect;
+
+    uint16_t C_fake;
+    uint16_t C_avrg;
 };
 
 extern webserverControlIDs webserverIDs;
@@ -78,6 +84,8 @@ void updateFromConfig(){
     ESPUI.updateSelect(webserverIDs.Cref,(String)(webserverConfig->C_REF_INT));
     ESPUI.updateNumber(webserverIDs.CintSelect,webserverConfig->C_REF_SEL);
     ESPUI.updateSelect(webserverIDs.clockcycleselect,(String)(webserverConfig->CY_HFCLK_SEL<<1 | webserverConfig->CY_DIV4_DIS));
+    ESPUI.updateNumber(webserverIDs.C_fake,webserverConfig->C_FAKE);
+    ESPUI.updateNumber(webserverIDs.C_avrg,webserverConfig->C_AVRG);
 
 }
 
@@ -139,6 +147,10 @@ void numberCall(Control* sender, int type)
         ESPUI.updateLabel(webserverIDs.t_dis_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
     } else if (sender->id == webserverIDs.CintSelect){
         webserverConfig->C_REF_SEL = sender->value.toInt();
+    } else if (sender->id == webserverIDs.C_fake){
+        webserverConfig->C_FAKE = sender->value.toInt();
+    } else if (sender->id == webserverIDs.C_avrg){
+        webserverConfig->C_AVRG = sender->value.toInt();
     }
     CapSensor.update_config(webserverConfig);
     writeConfigtoSD("/configPCAP0.txt",webserverConfig);
@@ -274,6 +286,9 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "500 kHz | OHF/4", "2", ControlColor::Alizarin, webserverIDs.clockcycleselect);
     ESPUI.addControl(ControlType::Option, "2000 kHz | OHF", "3", ControlColor::Alizarin, webserverIDs.clockcycleselect);
 
+    //Cfake & cavrg
+    webserverIDs.C_fake = ESPUI.addControl(ControlType::Number, "C_FAKE:", "0", ControlColor::Alizarin, tab2, &numberCall);
+    webserverIDs.C_avrg = ESPUI.addControl(ControlType::Number, "C_AVRG:", "0", ControlColor::Alizarin, tab2, &numberCall);
 
     updateFromConfig();
 }

@@ -165,6 +165,8 @@ void readConfigfromSD(char* configname, pcap_config_t *config){
   config->C_REF_SEL = configfile.readStringUntil('\r\n').toInt();
   config->CY_HFCLK_SEL = configfile.readStringUntil('\r\n').toInt();
   config->CY_DIV4_DIS = configfile.readStringUntil('\r\n').toInt();
+  config->C_FAKE = configfile.readStringUntil('\r\n').toInt();
+  config->C_AVRG = configfile.readStringUntil('\r\n').toInt();
 
   configfile.close();
 }

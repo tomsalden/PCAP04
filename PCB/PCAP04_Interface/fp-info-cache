@@ -1,4 +1,4 @@
-20353828314245945
+20357151303205918
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -52318,6 +52318,13 @@ Connector
 22
 22
 FootrpintLib
+BH-18650-PC
+
+
+0
+2
+2
+FootrpintLib
 BK-18650-PC4
 
 
@@ -52382,6 +52389,13 @@ PCAP_04-eva-board
 18
 FootrpintLib
 TUD_logo
+
+
+0
+0
+0
+FootrpintLib
+TUD_logo_Small
 
 
 0

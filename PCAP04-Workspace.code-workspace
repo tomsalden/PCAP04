@@ -6,6 +6,9 @@
 		{
 			"name": "PCAP04",
 			"path": "PlatformIO/PCAP04"
+		},
+		{
+			"path": "../../MasterThesis"
 		}
 	],
 	"settings": {}

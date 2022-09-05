@@ -1,5 +1,6 @@
 # ESP32 firmware for the PCAP04
 This project has been written as part of a Master's Thesis at the [University of Technology in Delft](https://www.tudelft.nl/). The thesis is based around a Silicon Carbide MEMS pressure sensor. This sensor is a capacitor-based sensor and to read it out, a Capacitor-to-digital converter is necessary. The PCAP04 should work really well due to its high accuracy and resolution. In addition, because it can measure up to 6 capacitances and compare it to one reference capacitance, it is ideal for multiple sensors in the same envionment.
+A PlatformIO project has been added to this repository for easy deployment of the code. This contains the latest code written. 
 
 # Connecting to the PCAP04
 This firmware is written for the ESP32 DevKit-WROOM (available in the Makerspace from the Electrical Engineering Study Association: [Klushok](https://klushok.etv.tudelft.nl/)).
@@ -65,10 +66,11 @@ For flashing the firmware, the basic Arduino IDE can be used. The board settings
 At this point in time, the set-up works via the serial monitor and a limited web-interface. The following will happen at startup:
 1. The ESP32 will startup, displayed with the Power Led. Either it will connect to a known network or start its own network.
 2. The ESP32 will test if an SD card is available. It will create a new file for data storage. If the SD-card is not available, the indicator light will flash red three times.
-3. The ESP will test the I2C connection to the PCAP04. If there is a problem, a red light will appear. Otherwise the light turns blue
-3. The ESP will initialise the PCAP04 and write the correct configuration to the chip. Once done, the Led turns green
-4. After initialisation, the PCAP04 will start its measurements. The ESP32 will retreive a new measurement every second, indicated by a flashing red-green light.
-5. If an SD-card is available, the ESP32 will save the data as in a .csv format on the card. In addition, the ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
+3. The ESP32 will check if a config file is present on the SD. If so, the config will be loaded. Otherwise, a new file will be created with the standard configuration.
+4. The ESP will test the I2C connection to the PCAP04. If there is a problem, a red light will appear. Otherwise the light turns blue
+5. The ESP will initialise the PCAP04 and write the correct configuration to the chip. Once done, the Led turns green
+6. After initialisation, the PCAP04 will start its measurements. The ESP32 will retreive a new measurement every second, indicated by a flashing red-green light.
+7. If an SD-card is available, the ESP32 will save the data as in a .csv format on the card. In addition, the ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
 
 Now, the Serial Port of the Arduino IDE can be used to readout the values.
 In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-is-data-streamer-1d52ffce-261c-4d7b-8017-89e8ee2b806f) in Excel can record, process and save live data.
@@ -111,7 +113,7 @@ The PCB design includes the following features:
 
 
 
-# Future improvements
+# Features and Future improvements
 ✅Ability to connect to and read data from PCAP04
 
 ✅Ability to change I2C address on demand
@@ -129,5 +131,7 @@ The PCB design includes the following features:
 ✅Create webserver-based interface for ESP32 (for config changes)
 
 ⬜️Allow for three PCAP04 devices at the same time
+
+⬜️Automatically change output format depending on mode selection
 
 ⬜️Clean up code for deployment

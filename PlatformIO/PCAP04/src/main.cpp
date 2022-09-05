@@ -169,6 +169,7 @@ void readConfigfromSD(char* configname, pcap_config_t *config){
   config->C_AVRG = configfile.readStringUntil('\r\n').toInt();
 
   configfile.close();
+  
 }
 
 void setup() {

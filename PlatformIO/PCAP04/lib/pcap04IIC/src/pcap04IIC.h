@@ -23,7 +23,7 @@ public:
   void initialize(void);
   void initializeIIC(void);
 
-  void update_address(char, char);
+  void update_address(unsigned char);
 
   bool test_connection(void);
 
@@ -161,7 +161,7 @@ PCAP04IIC::PCAP04IIC(pcap04_version_t version,
   
 }
 
-void PCAP04IIC::update_address(char addr, char configaddr)
+void PCAP04IIC::update_address(unsigned char addr)
 {
   // write_config(47,0); // STOP DSP
   // unsigned char I2CData = 0b00011101;
@@ -1675,7 +1675,7 @@ void PCAP04IIC::validate_nvram(){
     if (*nvram_p != *nvram_mirror_p){
       Serial.print("nvram different at address :");Serial.print(addr); 
       Serial.print(" with values (mcu, pcap) :(");Serial.print(*nvram_p); Serial.print(", ");Serial.print(*nvram_mirror_p);Serial.println(").");
-      delay(1000);
+      delay(100);
     }
     nvram_p++;
     nvram_mirror_p++;

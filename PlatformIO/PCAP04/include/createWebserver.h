@@ -8,10 +8,9 @@
 int currentPCAP = 1;
 float clockPeriod = 20;
 pcap_config_t* webserverConfig;
-extern PCAP04IIC CapSensor;
 
 void updateFromConfig(){
-    webserverConfig = &CapSensorConfig;
+    webserverConfig = &Config_PCAP_1;
     if (currentPCAP == 2){
         webserverConfig = &Config_PCAP_2;
     }
@@ -82,7 +81,7 @@ void SelectionCallback(Control* sender, int value)
             clockPeriod = 5;
         }
     }
-    CapSensor.update_config(webserverConfig);
+    pcap1.update_config(webserverConfig);
     writeConfigtoSD(config1,webserverConfig);
 }
 
@@ -101,7 +100,7 @@ void numberCall(Control* sender, int type)
     } else if (sender->id == webserverIDs.C_avrg){
         webserverConfig->C_AVRG = sender->value.toInt();
     }
-    CapSensor.update_config(webserverConfig);
+    pcap1.update_config(webserverConfig);
     writeConfigtoSD(config1,webserverConfig);
 
     Serial.print("Number: ");
@@ -135,7 +134,7 @@ void switchCallback(Control* sender, int value)
     if (portChange == true){
         webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
-    CapSensor.update_config(webserverConfig);
+    pcap1.update_config(webserverConfig);
     writeConfigtoSD(config1,webserverConfig);
 }
 

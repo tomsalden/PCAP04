@@ -11,9 +11,6 @@
 #include "FS.h"
 #include "SD.h"
 
-//Use EEPROM to save the configurations between power cycles
-#include <EEPROM.h>
-
 #include <DNSServer.h>
 #include <WiFi.h>
 
@@ -43,87 +40,80 @@ DynamicJsonDocument results_json(1024);
 pcap_results_t* pcap1_results;
 pcap_status_t* pcap1_status;
 
+
 void setup() {
-    delay(100);
-    Serial.begin(115200);
-    Serial.println("ESP32 has started, initialising connection...");
+  pcap1_enable = true;
+  pcap2_enable = false;
+  pcap3_enable = false;
+  //Startup esp32 and begin serial connection
+  delay(100);
+  Serial.begin(115200);
+  Serial.println("ESP32 has started, initialising connection...");
 
-    setupConnection();
-    setupWebserver();
-    ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
-    ESPUI.begin("ESPUI Control");
+  //Setup pins for indicator lights and update pins
+  pinMode(powerLed,OUTPUT);
+  pinMode(ledR, OUTPUT);
+  pinMode(ledG, OUTPUT);
+  pinMode(ledB, OUTPUT);
+  pinMode(pcap1_int, INPUT);
 
-    Serial.println("Now testing connection to PCAP04");
+  digitalWrite(powerLed,HIGH);
 
-    pinMode(powerLed,OUTPUT);
-    pinMode(ledR, OUTPUT);
-    pinMode(ledG, OUTPUT);
-    pinMode(ledB, OUTPUT);
-    pinMode(INTN_PG5, INPUT);
+  //Connect to a wifi network or setup a hotspot if a network is not available
+  setupConnection();
+  setupWebserver();
 
-    digitalWrite(powerLed,HIGH);
-    
-    delay(100);
+  //Setup the webserver and show that the device is initialising
+  ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
+  ESPUI.begin("ESPUI Control");
+  
+  //Initialise the SD-card
+  delay(100);
+  SD_Initialise();
 
-    SD_Initialise();
+  //Initialise the PCAP chips (only the ones that are enabled)
+  if (pcap1_enable == true){
+    Serial.println("Initializing 1st PCAP");
+    initialisePCAP(&pcap1, &Config_PCAP_1, pcap1_i2c, pcap1_addr);
+    attachInterrupt(digitalPinToInterrupt(pcap1_int),pcap_cdc_complete_callback,FALLING);
+    Serial.println("1st PCAP04 has been connected and is initialised");
+  }
 
-    while (CapSensor.test_connection() == false){
-        Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
-        digitalWrite(ledR,HIGH);
-        delay(3000);
-    }
+  if (pcap2_enable == true){
+    Serial.println("Initializing 2nd PCAP");
+    initialisePCAP(&pcap2, &Config_PCAP_2, pcap2_i2c, pcap2_addr);
+  }
 
-    digitalWrite(ledR,LOW);
+  if (pcap3_enable == true){
+    Serial.println("Initializing 3rd PCAP");
+    initialisePCAP(&pcap3, &Config_PCAP_3, pcap3_i2c, pcap3_addr);
+  }
 
-    Serial.println("\n Initialising PCAP04");
-    digitalWrite(ledB,HIGH);
+  
+  digitalWrite(ledB, LOW);
+  digitalWrite(ledG, HIGH);
+  delay(1000);
 
-    CapSensor.init_nvram();
-    pcap04_configure_registers(CapSensor, &CapSensorConfig);
+  pcap1.cdc_complete_flag = true; //Start the first readout. Then the chip continues
+  ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
 
-    CapSensor.initializeIIC();
-
-    //Serial.println("Changing address to 43");
-    //i2cAddress = 0x03;
-    pcap04_configure_registers(CapSensor, &CapSensorConfig);
-    CapSensor.send_command(CDC_START);
-    //CapSensor.update_address(43,3);
-
-    while (CapSensor.test_connection() == false){
-        Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
-        digitalWrite(ledR,HIGH);
-        delay(3000);
-    }
-
-
-    attachInterrupt(digitalPinToInterrupt(INTN_PG5),pcap_cdc_complete_callback,FALLING);
-    
-    Serial.println("PCAP04 has been connected and is initialised");
-    if (SD_attached == true){
-      Serial.println("SD-card is detected, printing to serial will be disabled");
-    }
-    digitalWrite(ledB, LOW);
-    digitalWrite(ledG, HIGH);
-    delay(1000);
-    CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
-    ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
-    readConfigfromSD(config1,&CapSensorConfig);
-    Serial.println("current config");
-    CapSensor.update_config(&CapSensorConfig);
-    CapSensor.print_config();
-    updateFromConfig();
-    return;
+  //Read and apply the configuration from the SD card
+  readConfigfromSD(config1,&Config_PCAP_1);
+  pcap1.update_config(&Config_PCAP_1);
+  //Serial.println("current config");
+  //pcap1.print_config();
+  updateFromConfig();
 }
 
 
 void loop() {
 
     
-    if (CapSensor.cdc_complete_flag){
+    if (pcap1.cdc_complete_flag){
         digitalWrite(ledR, HIGH);
-        pcap1_status = CapSensor.get_status(false);
-        CapSensor.cdc_complete_flag = false;
-        pcap1_results = CapSensor.get_results();
+        pcap1_status = pcap1.get_status(false);
+        pcap1.cdc_complete_flag = false;
+        pcap1_results = pcap1.get_results();
 
         current_micros = micros();
 

@@ -9,8 +9,6 @@
 #include "FS.h"
 #include "SD.h"
 
-extern PCAP04IIC CapSensor;
-
 void setupConnection(){
     const byte DNS_PORT = 53;
 
@@ -389,14 +387,13 @@ void otherSwitchExample(Control* sender, int value)
 }
 
 void pcap_cdc_complete_callback(){
-  CapSensor.cdc_complete_flag = true;
+  pcap1.cdc_complete_flag = true;
 }
 
-void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
+void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config, unsigned char i2cAddress){
 
-  Serial.println("current config");
-  
-  pcap.print_config();
+  //Serial.println("current config");
+  //pcap.print_config();
 
   *pcap_config = pcap.get_config();
   //Reg0 settings
@@ -467,9 +464,54 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config){
 
   pcap.update_config(pcap_config);
 
-  Serial.println("updated config");
-  pcap.print_config();
+  //Serial.println("updated config");
+  //pcap.print_config();
 
+}
+
+void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c, unsigned char pcap_addr){
+  int pcap_addr_conf = 0x00;
+
+  //Enable I2C on the selected device
+  pinMode(pcap_i2c, OUTPUT);
+  digitalWrite(pcap_i2c, HIGH);
+
+
+  while (pcap->test_connection() == false){  //Test if connection can be made with the default address
+    Serial.println("Default address failed, trying with already correct address");
+    pcap->update_address(pcap_addr);             
+    if (pcap->test_connection() == true){    //Test if the connection can be made with the already changed address
+      pcap->send_command(POR_RESET);         //Do a power on reset to reset the address
+      pcap->update_address(defaultAddress);
+      break;
+    }
+    pcap->update_address(defaultAddress);
+
+    Serial.println("Connection to PCAP04 failed!! Retrying in 3 second");
+    digitalWrite(ledR,HIGH);
+    delay(3000);
+  }
+
+  Serial.println("\n Initialising PCAP04");
+  digitalWrite(ledR,LOW);
+  digitalWrite(ledB,HIGH);
+
+  pcap->init_nvram();
+  pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
+  pcap->initializeIIC();
+
+
+  pcap_addr_conf = pcap_addr & 0b011;       //Apply the new address in the configuration
+  Serial.println("Changing address to " + (String)pcap_addr);
+  pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
+  pcap->send_command(CDC_START);
+  pcap->update_address(pcap_addr);
+
+  while (pcap->test_connection() == false){
+    Serial.println("Address change of PCAP04 failed!! Retrying to connect in 3 second");
+    digitalWrite(ledR,HIGH);
+    delay(3000);
+  }
 }
 
 #endif

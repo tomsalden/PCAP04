@@ -2,6 +2,7 @@
 #include "pcap04IIC.h"
 #include <Wire.h>
 #include <ArduinoJson.h>
+#include "definitions.h"
 #include "createWebserver.h"
 #include "supportingFunctions.h"
 
@@ -16,32 +17,8 @@
 #include <DNSServer.h>
 #include <WiFi.h>
 
-//Definitions for PCAP pins
-#define INTN_PG5 2    //DataIsReady from PCAP04
-#define address 0x28  //I2C address of PCAP04
-#define refCapacitance 0 //Internal reference capacitance (0 = min, 1 = 1... 31 = 31pF, ish)
-
-//Definitions for indicator Leds
-#define powerLed 27
-#define ledR 26
-#define ledG 33
-#define ledB 32
-
-//Definitions for SD-Card
-#define SD_CS 5
-
-IPAddress apIP(192, 168, 4, 1);
-DNSServer dnsServer;
-
-const char* ssid = "LapTom";
-const char* password = "1234567890";
-const char* hostname = "espui";
-
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
-unsigned long webTimeout = 1000000;
-
-unsigned char i2cAddress = 0x00;
 
 int resultIndex = 0;
 float result0[9];
@@ -53,32 +30,24 @@ float medianResult0[3];
 float medianResult1[3];
 float medianResult2[3];
 
-
-bool SD_attached = false;
-String fileName = "";
-uint fileNumber = 0;
 String dataMessage;
 
 uint16_t button1;
 uint16_t switchOne;
 uint16_t status;
 uint16_t selectPCAP;
-webserverControlIDs webserverIDs;
 
 DynamicJsonDocument results_json(1024);
 
 pcap04_version_t version = PCAP04_V1;
 pcap_serial_interface_t interface = PCAP_SPI_MODE;
 pcap_measurement_modes_t measurement = STANDARD;
-pcap_config_t CapSensorConfig;
-pcap_config_t Config_PCAP_2;
-pcap_config_t Config_PCAP_3;
 pcap_config_handler_t metsensor_pcap_config_handler;
 
 pcap_results_t* pcap1_results;
 pcap_status_t* pcap1_status;
 
-PCAP04IIC CapSensor(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,address,CapSensorConfig);
+PCAP04IIC CapSensor(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,pcapAddress,CapSensorConfig);
 
 void SD_failure_indicator(){
   digitalWrite(ledR,HIGH);
@@ -132,7 +101,7 @@ void SD_Initialise(){
   file.close();
 }
 
-void readConfigfromSD(char* configname, pcap_config_t *config){
+void readConfigfromSD(const char* configname, pcap_config_t *config){
   //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
   if (SD_attached == false){ //Don't read anything if there is no SD card attached
     return;
@@ -152,21 +121,21 @@ void readConfigfromSD(char* configname, pcap_config_t *config){
   }
   String buffer;
   //Read first line
-  buffer = configfile.readStringUntil('\r\n');
+  buffer = configfile.readStringUntil('\n');
   //Read config lines:
-  config->C_DIFFERENTIAL = configfile.readStringUntil('\r\n').toInt();
-  config->C_FLOATING = configfile.readStringUntil('\r\n').toInt();
-  config->C_PORT_EN = configfile.readStringUntil('\r\n').toInt();
-  config->C_COMP_EXT = configfile.readStringUntil('\r\n').toInt();
-  config->RDCHG_INT_SEL0 = configfile.readStringUntil('\r\n').toInt();
-  config->RDCHG_INT_SEL1 = configfile.readStringUntil('\r\n').toInt();
-  config->RCHG_SEL = configfile.readStringUntil('\r\n').toInt();
-  config->C_REF_INT = configfile.readStringUntil('\r\n').toInt();
-  config->C_REF_SEL = configfile.readStringUntil('\r\n').toInt();
-  config->CY_HFCLK_SEL = configfile.readStringUntil('\r\n').toInt();
-  config->CY_DIV4_DIS = configfile.readStringUntil('\r\n').toInt();
-  config->C_FAKE = configfile.readStringUntil('\r\n').toInt();
-  config->C_AVRG = configfile.readStringUntil('\r\n').toInt();
+  config->C_DIFFERENTIAL = configfile.readStringUntil('\n').toInt();
+  config->C_FLOATING = configfile.readStringUntil('\n').toInt();
+  config->C_PORT_EN = configfile.readStringUntil('\n').toInt();
+  config->C_COMP_EXT = configfile.readStringUntil('\n').toInt();
+  config->RDCHG_INT_SEL0 = configfile.readStringUntil('\n').toInt();
+  config->RDCHG_INT_SEL1 = configfile.readStringUntil('\n').toInt();
+  config->RCHG_SEL = configfile.readStringUntil('\n').toInt();
+  config->C_REF_INT = configfile.readStringUntil('\n').toInt();
+  config->C_REF_SEL = configfile.readStringUntil('\n').toInt();
+  config->CY_HFCLK_SEL = configfile.readStringUntil('\n').toInt();
+  config->CY_DIV4_DIS = configfile.readStringUntil('\n').toInt();
+  config->C_FAKE = configfile.readStringUntil('\n').toInt();
+  config->C_AVRG = configfile.readStringUntil('\n').toInt();
 
   configfile.close();
   
@@ -236,7 +205,7 @@ void setup() {
     delay(1000);
     CapSensor.cdc_complete_flag = true; //Start the first readout. Then the chip continues
     ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Started measurements");
-    readConfigfromSD("/configPCAP0.txt",&CapSensorConfig);
+    readConfigfromSD(config1,&CapSensorConfig);
     Serial.println("current config");
     CapSensor.update_config(&CapSensorConfig);
     CapSensor.print_config();

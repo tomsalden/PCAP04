@@ -3,65 +3,14 @@
 
 #include <ESPUI.h>
 #include "supportingFunctions.h"
+#include "definitions.h"
 
 int currentPCAP = 1;
 float clockPeriod = 20;
 pcap_config_t* webserverConfig;
-extern pcap_config_t CapSensorConfig;
-
-struct webserverControlIDs
-{
-    uint16_t webResult0;
-    uint16_t webResult1;
-    uint16_t webResult2;
-    
-    uint16_t medianResult0;
-    uint16_t medianResult1;
-    uint16_t medianResult2;
-
-    uint16_t STATUS;
-    uint16_t selectPCAP;
-
-    //Tab1
-    uint16_t MEAS_SCHEME;
-
-    uint16_t PORT_SELECT0;
-    uint16_t PORT_SELECT1;
-    uint16_t PORT_SELECT2;
-    uint16_t PORT_SELECT3;
-    uint16_t PORT_SELECT4;
-    uint16_t PORT_SELECT5;    
-
-    uint16_t StrayCompensation;
-
-    uint16_t Rdis_0_3;
-    uint16_t Rdis_4_5;
-    uint16_t Rchr;
-
-    uint16_t Cref;
-    uint16_t CintSelect;
-
-    //Tab2
-    uint16_t t_precharge;
-    uint16_t t_fullcharge;
-    uint16_t t_discharge;
-    uint16_t t_pre_label;
-    uint16_t t_full_label;
-    uint16_t t_dis_label;
-    uint16_t clockcycleselect;
-
-    uint16_t C_fake;
-    uint16_t C_avrg;
-};
-
-extern webserverControlIDs webserverIDs;
 extern PCAP04IIC CapSensor;
 
 void updateFromConfig(){
-    //extern webserverControlIDs webserverIDs;
-    extern pcap_config_t Config_PCAP_2;
-    extern pcap_config_t Config_PCAP_3;
-
     webserverConfig = &CapSensorConfig;
     if (currentPCAP == 2){
         webserverConfig = &Config_PCAP_2;
@@ -134,7 +83,7 @@ void SelectionCallback(Control* sender, int value)
         }
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
+    writeConfigtoSD(config1,webserverConfig);
 }
 
 void numberCall(Control* sender, int type)
@@ -153,7 +102,7 @@ void numberCall(Control* sender, int type)
         webserverConfig->C_AVRG = sender->value.toInt();
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
+    writeConfigtoSD(config1,webserverConfig);
 
     Serial.print("Number: ");
     Serial.println(sender->value);
@@ -184,10 +133,10 @@ void switchCallback(Control* sender, int value)
     }
     
     if (portChange == true){
-        webserverConfig->C_PORT_EN = (webserverConfig->C_PORT_EN & (~(1<<switchId)) | (sender->value.toInt() << switchId));
+        webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
     CapSensor.update_config(webserverConfig);
-    writeConfigtoSD("/configPCAP0.txt",webserverConfig);
+    writeConfigtoSD(config1,webserverConfig);
 }
 
 
@@ -197,12 +146,12 @@ void setupWebserver(){
     uint16_t tab0 = ESPUI.addControl(ControlType::Tab, "Status", "Status");
     uint16_t tab1 = ESPUI.addControl(ControlType::Tab, "CDC Frontend", "CDC Frontend");
     uint16_t tab2 = ESPUI.addControl(ControlType::Tab, "CDC", "CDC");
-    uint16_t tab3 = ESPUI.addControl(ControlType::Tab, "RDC", "RDC");
-    uint16_t tab4 = ESPUI.addControl(ControlType::Tab, "PDM/PWM", "PDM/PWM");
-    uint16_t tab5 = ESPUI.addControl(ControlType::Tab, "DSP/GPIO", "DSP/GPIO");
-    uint16_t tab6 = ESPUI.addControl(ControlType::Tab, "Misc", "Misc");
-    uint16_t tab7 = ESPUI.addControl(ControlType::Tab, "Expert", "Expert");
-    uint16_t tab8 = ESPUI.addControl(ControlType::Tab, "Config Check", "Config Check");
+    //uint16_t tab3 = ESPUI.addControl(ControlType::Tab, "RDC", "RDC");
+    //uint16_t tab4 = ESPUI.addControl(ControlType::Tab, "PDM/PWM", "PDM/PWM");
+    //uint16_t tab5 = ESPUI.addControl(ControlType::Tab, "DSP/GPIO", "DSP/GPIO");
+    //uint16_t tab6 = ESPUI.addControl(ControlType::Tab, "Misc", "Misc");
+    //uint16_t tab7 = ESPUI.addControl(ControlType::Tab, "Expert", "Expert");
+    //uint16_t tab8 = ESPUI.addControl(ControlType::Tab, "Config Check", "Config Check");
 
     //Outside of the tabs
     webserverIDs.STATUS = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin);

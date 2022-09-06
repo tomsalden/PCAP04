@@ -10,18 +10,8 @@
 #include "SD.h"
 
 extern PCAP04IIC CapSensor;
-extern bool SD_attached;
-extern String fileName;
-extern uint fileNumber;
-extern unsigned char i2cAddress;
 
 void setupConnection(){
-    extern const char* hostname;
-    extern const char* ssid;
-    extern const char* password;
-
-    extern IPAddress apIP;
-    extern DNSServer dnsServer;
     const byte DNS_PORT = 53;
 
     WiFi.setHostname(hostname);
@@ -111,7 +101,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
   file.close();
 }
 
-void writeConfigtoSD(char* configname,pcap_config_t * config){
+void writeConfigtoSD(const char* configname,pcap_config_t * config){
   if (SD_attached == false){//Don't write anything if there is no SD card attached
     return;
   }
@@ -123,23 +113,23 @@ void writeConfigtoSD(char* configname,pcap_config_t * config){
   }
   configfile.close();
 
-  String dataMessage = "Configurationfile for PCAP04\r\n";
+  String dataMessage = "Configurationfile for PCAP04\n";
   writeFile(SD, configname, dataMessage.c_str());
 
   dataMessage = 
-  String(config->C_DIFFERENTIAL)   + "\r\n" + 
-  String(config->C_FLOATING)       + "\r\n" +
-  String(config->C_PORT_EN)        + "\r\n" +
-  String(config->C_COMP_EXT)       + "\r\n" +
-  String(config->RDCHG_INT_SEL0)   + "\r\n" +
-  String(config->RDCHG_INT_SEL1)   + "\r\n" +
-  String(config->RCHG_SEL)         + "\r\n" +
-  String(config->C_REF_INT)        + "\r\n" +
-  String(config->C_REF_SEL)        + "\r\n" +
-  String(config->CY_HFCLK_SEL)     + "\r\n" +
-  String(config->CY_DIV4_DIS)      + "\r\n" + 
-  String(config->C_FAKE)           + "\r\n" +
-  String(config->C_AVRG)           + "\r\n" ;
+  String(config->C_DIFFERENTIAL)   + "\n" + 
+  String(config->C_FLOATING)       + "\n" +
+  String(config->C_PORT_EN)        + "\n" +
+  String(config->C_COMP_EXT)       + "\n" +
+  String(config->RDCHG_INT_SEL0)   + "\n" +
+  String(config->RDCHG_INT_SEL1)   + "\n" +
+  String(config->RCHG_SEL)         + "\n" +
+  String(config->C_REF_INT)        + "\n" +
+  String(config->C_REF_SEL)        + "\n" +
+  String(config->CY_HFCLK_SEL)     + "\n" +
+  String(config->CY_DIV4_DIS)      + "\n" + 
+  String(config->C_FAKE)           + "\n" +
+  String(config->C_AVRG)           + "\n" ;
   
   appendFile(SD, configname, dataMessage.c_str());
 }

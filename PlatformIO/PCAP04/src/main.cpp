@@ -38,108 +38,10 @@ uint16_t status;
 uint16_t selectPCAP;
 
 DynamicJsonDocument results_json(1024);
-
-pcap04_version_t version = PCAP04_V1;
-pcap_serial_interface_t interface = PCAP_SPI_MODE;
-pcap_measurement_modes_t measurement = STANDARD;
-pcap_config_handler_t metsensor_pcap_config_handler;
+//pcap_config_handler_t metsensor_pcap_config_handler;
 
 pcap_results_t* pcap1_results;
 pcap_status_t* pcap1_status;
-
-PCAP04IIC CapSensor(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,pcapAddress,CapSensorConfig);
-
-void SD_failure_indicator(){
-  digitalWrite(ledR,HIGH);
-  delay(1000);
-  digitalWrite(ledR,LOW);
-  delay(1000);
-  digitalWrite(ledR,HIGH);
-  delay(1000);
-  digitalWrite(ledR,LOW);
-  return;
-}
-
-
-void SD_Initialise(){
-  Serial.println("Mounting SD-Card");
-  SD.begin(SD_CS);
-  if(!SD.begin(SD_CS)){
-    Serial.println("Card mount failed");
-    SD_failure_indicator();
-    return;
-  }
-  uint8_t cardType = SD.cardType();
-  if(cardType == CARD_NONE) {
-    Serial.println("No SD card attached");
-    SD_failure_indicator();
-    return;
-  }
-  Serial.println("Initializing SD card...");
-  if (!SD.begin(SD_CS)) {
-    Serial.println("ERROR - SD card initialization failed!");
-    SD_failure_indicator();
-    return;    // init failed
-  }
-  SD_attached = true;
-  Serial.println("SD-Card attachment successfull");
-
-  fileName = "/data" + String(fileNumber) + ".txt";
-  File file = SD.open(fileName);
-  Serial.println("Starting with data0.txt");
-
-  while(file){
-    file.close();
-    fileNumber = fileNumber + 1;
-    fileName = "/data" + String(fileNumber) + ".txt";
-
-    Serial.println((String)"Trying " + fileName);
-    file = SD.open(fileName);
-  }
-  Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
-  file.close();
-}
-
-void readConfigfromSD(const char* configname, pcap_config_t *config){
-  //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
-  if (SD_attached == false){ //Don't read anything if there is no SD card attached
-    return;
-  }
-
-  Serial.println("Read configuration from SD card, if file exits. Otherwise create new config file");
-
-  //If the file does not exist, create a new one and write the basic configuration on it
-  File configfile = SD.open(configname,FILE_READ);
-  if ( !configfile ){
-    configfile.close();
-    Serial.println("File does not exist, creating file...");
-    writeFile(SD,configname,"");
-    writeConfigtoSD(configname,config); //Write the basic config in the file
-    //return;
-    configfile = SD.open(configname,FILE_READ);
-  }
-  String buffer;
-  //Read first line
-  buffer = configfile.readStringUntil('\n');
-  //Read config lines:
-  config->C_DIFFERENTIAL = configfile.readStringUntil('\n').toInt();
-  config->C_FLOATING = configfile.readStringUntil('\n').toInt();
-  config->C_PORT_EN = configfile.readStringUntil('\n').toInt();
-  config->C_COMP_EXT = configfile.readStringUntil('\n').toInt();
-  config->RDCHG_INT_SEL0 = configfile.readStringUntil('\n').toInt();
-  config->RDCHG_INT_SEL1 = configfile.readStringUntil('\n').toInt();
-  config->RCHG_SEL = configfile.readStringUntil('\n').toInt();
-  config->C_REF_INT = configfile.readStringUntil('\n').toInt();
-  config->C_REF_SEL = configfile.readStringUntil('\n').toInt();
-  config->CY_HFCLK_SEL = configfile.readStringUntil('\n').toInt();
-  config->CY_DIV4_DIS = configfile.readStringUntil('\n').toInt();
-  config->C_FAKE = configfile.readStringUntil('\n').toInt();
-  config->C_AVRG = configfile.readStringUntil('\n').toInt();
-
-  configfile.close();
-  
-}
 
 void setup() {
     delay(100);

@@ -24,7 +24,7 @@ const char* password = "1234567890";
 const char* hostname = "espui";
 IPAddress apIP(192, 168, 4, 1);
 DNSServer dnsServer;
-unsigned long webTimeout = 1000000;
+unsigned long webTimeout = 5000000;
 
 webserverControlIDs webserverIDs;
 
@@ -42,5 +42,7 @@ const char* config1 = "/configPCAP0.txt";
 pcap_config_t CapSensorConfig;
 pcap_config_t Config_PCAP_2;
 pcap_config_t Config_PCAP_3;
+
+PCAP04IIC CapSensor(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,pcapAddress,CapSensorConfig);
 
 #endif

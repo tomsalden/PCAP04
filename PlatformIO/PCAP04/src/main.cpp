@@ -17,6 +17,12 @@
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
 
+bool newResults = false;
+int resultIndexes[3] = {0,0,0};
+int medianIndexes[3] = {0,0,0};
+float resultArray[3][6][9];
+float medianArray[3][6][3];
+
 int resultIndex = 0;
 float result0[9];
 float result1[9];
@@ -39,6 +45,9 @@ DynamicJsonDocument results_json(1024);
 
 pcap_results_t* pcap1_results;
 pcap_status_t* pcap1_status;
+
+pcap_results_t* pcap_results;
+pcap_status_t* pcap_status;
 
 
 void setup() {
@@ -123,91 +132,78 @@ void setup() {
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
 }
 
+void updateResults(PCAP04IIC * pcap, int pcapIndex){
+  digitalWrite(ledR, HIGH);
+  pcap_status = pcap->get_status(false);
+  pcap->cdc_complete_flag = false;
+  pcap_results = pcap->get_results();
+
+  current_micros = micros();
+  if (pcap_status->COMB_ERR){
+    Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
+    return;
+  }
+  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap1_results->C0_over_CREF;
+  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap1_results->C1_over_CREF;
+  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap1_results->C2_over_CREF;
+  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap1_results->C3_over_CREF;
+  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap1_results->C4_over_CREF;
+  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap1_results->C5_over_CREF;
+
+  newResults = true;
+  digitalWrite(ledR, LOW);
+}
 
 void loop() {
     if (pcap1.cdc_complete_flag){
-        digitalWrite(ledR, HIGH);
-        pcap1_status = pcap1.get_status(false);
-        pcap1.cdc_complete_flag = false;
-        pcap1_results = pcap1.get_results();
-
-        current_micros = micros();
-
-        if (!pcap1_status->COMB_ERR){
-        results_json["results0_f"] = pcap1_results->C0_over_CREF;
-        results_json["results1_f"] = pcap1_results->C1_over_CREF;
-        results_json["results2_f"] = pcap1_results->C2_over_CREF;
-        results_json["results3_f"] = pcap1_results->PT1_over_PTREF;
-        results_json["results4_f"] = pcap1_results->PTInternal_over_PTREF;
-        }
-        results_json["time"] = current_micros;
-        results_json["RUNBIT"] = pcap1_status->RUNBIT;
-        results_json["CDC_ACTIVE"] = pcap1_status->CDC_ACTIVE;
-        results_json["RDC_READY"] = pcap1_status->RDC_READY;
-        results_json["AUTOBOOT_BUSY"] = pcap1_status->AUTOBOOT_BUSY;
-        results_json["POR_CDC_DSP_COLL"] = pcap1_status->POR_CDC_DSP_COLL;
-        results_json["POR_FLAG_WDOG"] = pcap1_status->POR_FLAG_WDOG;
-        results_json["COMB_ERR"] = pcap1_status->COMB_ERR;
-        results_json["ERR_OVERFL"] = pcap1_status->ERR_OVERFL;
-        results_json["MUP_ERR"] = pcap1_status->MUP_ERR;
-        results_json["RDC_ERR"] = pcap1_status->RDC_ERR;
-        results_json["C_PORT_ERR0"] = pcap1_status->C_PORT_ERR0;
-        results_json["C_PORT_ERR1"] = pcap1_status->C_PORT_ERR1;
-        results_json["C_PORT_ERR2"] = pcap1_status->C_PORT_ERR2;
-        results_json["C_PORT_ERR3"] = pcap1_status->C_PORT_ERR3;
-        results_json["C_PORT_ERR4"] = pcap1_status->C_PORT_ERR4;
-        results_json["C_PORT_ERR5"] = pcap1_status->C_PORT_ERR5;
-        results_json["C_PORT_ERR_INT"] = pcap1_status->C_PORT_ERR_INT;
-
-        //serializeJson(results_json, Serial);  Serial.println();
+      updateResults(&pcap1,1);
         
-        results_json.clear();
-
-        //Print results so they can be plotted
-        result0[resultIndex] = pcap1_results->C0_over_CREF;
-        result1[resultIndex] = pcap1_results->C1_over_CREF;
-        result2[resultIndex] = pcap1_results->C2_over_CREF;
-
-
         //Print for Excel
         Serial.print(result0[resultIndex],9);
         Serial.print(",");Serial.print(result1[resultIndex],9);
         Serial.print(",");Serial.print(result2[resultIndex],9);
 
-
-        if(SD_attached == true){
-          //Write to SD
-          dataMessage = String(current_micros) + ";" + String(result0[resultIndex],9) + ";" + String(result1[resultIndex],9) + ";" + String(result2[resultIndex],9) + "\r\n";
-          appendFile(SD, fileName.c_str(), dataMessage.c_str());
-        }
-
-        if (current_micros > previous_micros + webTimeout){
-          //Set web interface
-          ESPUI.updateLabel(webserverIDs.webResult0,String(result0[resultIndex],9));
-          ESPUI.updateLabel(webserverIDs.webResult1,String(result1[resultIndex],9));
-          ESPUI.updateLabel(webserverIDs.webResult2,String(result2[resultIndex],9));
-
-          //Filter the result with a median filter
-          medianResult0[medianIndex] = medianOrder(result0,9);
-          medianResult1[medianIndex] = medianOrder(result1,9);
-          medianResult2[medianIndex] = medianOrder(result2,9);
-
-          ESPUI.updateLabel(webserverIDs.medianResult0,String((medianResult0[0]+medianResult0[1]+medianResult0[2])/3,9));
-          ESPUI.updateLabel(webserverIDs.medianResult1,String((medianResult1[0]+medianResult1[1]+medianResult1[2])/3,9));
-          ESPUI.updateLabel(webserverIDs.medianResult2,String((medianResult2[0]+medianResult2[1]+medianResult2[2])/3,9));
-
-          medianIndex = medianIndex + 1;
-          if (medianIndex > 2){
-            medianIndex = 0;
-          }
-          previous_micros = current_micros;
-        }
-
-
-        resultIndex = resultIndex + 1;
-        if (resultIndex > 8){
-          resultIndex = 0;
-        }
-        digitalWrite(ledR, LOW);
     }
+
+    if (newResults != true){
+      return;
+    }
+    
+    if (SD_attached == true)
+    {
+      // Write to SD
+      dataMessage = String(current_micros) + ";" + String(result0[resultIndex], 9) + ";" + String(result1[resultIndex], 9) + ";" + String(result2[resultIndex], 9) + "\r\n";
+      appendFile(SD, fileName.c_str(), dataMessage.c_str());
+    }
+
+    if (current_micros > previous_micros + webTimeout)
+    {
+      // Set web interface
+      ESPUI.updateLabel(webserverIDs.webResult0, String(result0[resultIndex], 9));
+      ESPUI.updateLabel(webserverIDs.webResult1, String(result1[resultIndex], 9));
+      ESPUI.updateLabel(webserverIDs.webResult2, String(result2[resultIndex], 9));
+
+      // Filter the result with a median filter
+      medianResult0[medianIndex] = medianOrder(result0, 9);
+      medianResult1[medianIndex] = medianOrder(result1, 9);
+      medianResult2[medianIndex] = medianOrder(result2, 9);
+
+      ESPUI.updateLabel(webserverIDs.medianResult0, String((medianResult0[0] + medianResult0[1] + medianResult0[2]) / 3, 9));
+      ESPUI.updateLabel(webserverIDs.medianResult1, String((medianResult1[0] + medianResult1[1] + medianResult1[2]) / 3, 9));
+      ESPUI.updateLabel(webserverIDs.medianResult2, String((medianResult2[0] + medianResult2[1] + medianResult2[2]) / 3, 9));
+
+      medianIndex = medianIndex + 1;
+      if (medianIndex > 2)
+      {
+        medianIndex = 0;
+      }
+      previous_micros = current_micros;
+    }
+
+    resultIndex = resultIndex + 1;
+    if (resultIndex > 8)
+    {
+      resultIndex = 0;
+    }
+    digitalWrite(ledR, LOW);
 }

@@ -9,64 +9,65 @@
 #include "FS.h"
 #include "SD.h"
 
-void setupConnection(){
-    const byte DNS_PORT = 53;
+void setupConnection()
+{
+  const byte DNS_PORT = 53;
 
-    WiFi.setHostname(hostname);
-    // try to connect to existing network
-    WiFi.begin(ssid, password);
-    Serial.print("\n\nTry to connect to existing network");
+  WiFi.setHostname(hostname);
+  // try to connect to existing network
+  WiFi.begin(ssid, password);
+  Serial.print("\n\nTry to connect to existing network");
 
+  {
+    uint8_t timeout = 10;
+
+    // Wait for connection, 5s timeout
+    do
     {
-        uint8_t timeout = 10;
+      delay(500);
+      Serial.print(".");
+      timeout--;
+    } while (timeout && WiFi.status() != WL_CONNECTED);
 
-        // Wait for connection, 5s timeout
-        do
-        {
-            delay(500);
-            Serial.print(".");
-            timeout--;
-        } while (timeout && WiFi.status() != WL_CONNECTED);
+    // not connected -> create hotspot
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print("\n\nCreating hotspot");
 
-        // not connected -> create hotspot
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            Serial.print("\n\nCreating hotspot");
-
-            WiFi.mode(WIFI_AP);
-            delay(100);
-            WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+      WiFi.mode(WIFI_AP);
+      delay(100);
+      WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 #if defined(ESP32)
-            uint32_t chipid = 0;
-            for (int i = 0; i < 17; i = i + 8)
-            {
-                chipid |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
-            }
+      uint32_t chipid = 0;
+      for (int i = 0; i < 17; i = i + 8)
+      {
+        chipid |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+      }
 #else
-            uint32_t chipid = ESP.getChipId();
+      uint32_t chipid = ESP.getChipId();
 #endif
-            char ap_ssid[25];
-            snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
-            WiFi.softAP(ap_ssid);
+      char ap_ssid[25];
+      snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
+      WiFi.softAP(ap_ssid);
 
-            timeout = 5;
+      timeout = 5;
 
-            do
-            {
-                delay(500);
-                Serial.print(".");
-                timeout--;
-            } while (timeout);
-        }
+      do
+      {
+        delay(500);
+        Serial.print(".");
+        timeout--;
+      } while (timeout);
     }
+  }
 
-    dnsServer.start(DNS_PORT, "*", apIP);
+  dnsServer.start(DNS_PORT, "*", apIP);
 
-    Serial.println("\n\nWiFi parameters:");
-    Serial.print("Mode: ");
-    Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
+  Serial.println("\n\nWiFi parameters:");
+  Serial.print("Mode: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
 }
 
 //SD functions

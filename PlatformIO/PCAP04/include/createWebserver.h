@@ -37,6 +37,21 @@ void updateFromConfig(){
 
 }
 
+void configFromUpdate(){
+    if (currentPCAP == 1){
+        pcap1.update_config(webserverConfig);
+        writeConfigtoSD(config1,webserverConfig);
+    }
+    if (currentPCAP == 2){
+        pcap2.update_config(webserverConfig);
+        writeConfigtoSD(config2,webserverConfig);
+    }
+    if (currentPCAP == 3){
+        pcap3.update_config(webserverConfig);
+        writeConfigtoSD(config3,webserverConfig);
+    }
+}
+
 void selectedPCAP(Control* sender, int value)
 {
     switch (sender->value.toInt())
@@ -81,8 +96,7 @@ void SelectionCallback(Control* sender, int value)
             clockPeriod = 5;
         }
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 }
 
 void numberCall(Control* sender, int type)
@@ -100,8 +114,7 @@ void numberCall(Control* sender, int type)
     } else if (sender->id == webserverIDs.C_avrg){
         webserverConfig->C_AVRG = sender->value.toInt();
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 
     Serial.print("Number: ");
     Serial.println(sender->value);
@@ -134,8 +147,7 @@ void switchCallback(Control* sender, int value)
     if (portChange == true){
         webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 }
 
 

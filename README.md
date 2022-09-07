@@ -130,8 +130,10 @@ The PCB design includes the following features:
 
 ✅Create webserver-based interface for ESP32 (for config changes)
 
-⬜️Allow for three PCAP04 devices at the same time
+✅Allow for three PCAP04 devices at the same time
 
 ⬜️Automatically change output format depending on mode selection
+
+⬜️Make a csv file automatically from the output
 
 ⬜️Clean up code for deployment

@@ -96,28 +96,25 @@ void setup() {
     ESPUI.updateLabel(webserverIDs.STATUS,"3rd PCAP04 has been initialised");
   }
 
-  
+  ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Loading correct config");
   digitalWrite(ledB, LOW);
   digitalWrite(ledG, HIGH);
   delay(1000);
 
   //Start the first readout. Then the chip continues
-  pcap1.cdc_complete_flag = true; 
-  pcap2.cdc_complete_flag = true;
-  pcap3.cdc_complete_flag = true;
-
-  ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Loading correct config");
-
   //Read and apply the configuration from the SD card
   if (pcap1_enable == true){
+    pcap1.cdc_complete_flag = true; 
     readConfigfromSD(config1,&Config_PCAP_1);
     pcap1.update_config(&Config_PCAP_1);
   }
   if (pcap2_enable == true){
+    pcap2.cdc_complete_flag = true;
     readConfigfromSD(config2,&Config_PCAP_2);
     pcap2.update_config(&Config_PCAP_2);
   }
   if (pcap3_enable == true){
+    pcap3.cdc_complete_flag = true;
     readConfigfromSD(config3,&Config_PCAP_3);
     pcap3.update_config(&Config_PCAP_3);
   }
@@ -128,8 +125,6 @@ void setup() {
 
 
 void loop() {
-
-    
     if (pcap1.cdc_complete_flag){
         digitalWrite(ledR, HIGH);
         pcap1_status = pcap1.get_status(false);

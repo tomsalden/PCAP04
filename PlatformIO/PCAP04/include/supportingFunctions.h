@@ -386,8 +386,16 @@ void otherSwitchExample(Control* sender, int value)
     Serial.println(sender->id);
 }
 
-void pcap_cdc_complete_callback(){
+void pcap1_cdc_complete_callback(){
   pcap1.cdc_complete_flag = true;
+}
+
+void pcap2_cdc_complete_callback(){
+  pcap2.cdc_complete_flag = true;
+}
+
+void pcap3_cdc_complete_callback(){
+  pcap3.cdc_complete_flag = true;
 }
 
 void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config, unsigned char i2cAddress){

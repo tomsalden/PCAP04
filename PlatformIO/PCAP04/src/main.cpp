@@ -150,6 +150,12 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex){
   resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap1_results->C4_over_CREF;
   resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap1_results->C5_over_CREF;
 
+  resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
+  if (resultIndexes[pcapIndex] > sizeof(resultIndexes[pcapIndex])/sizeof(int) - 1)
+  {
+    resultIndexes[pcapIndex] = 0;
+  }
+  
   newResults = true;
   digitalWrite(ledR, LOW);
 }
@@ -168,7 +174,7 @@ void loop() {
     if (newResults != true){
       return;
     }
-    
+
     if (SD_attached == true)
     {
       // Write to SD

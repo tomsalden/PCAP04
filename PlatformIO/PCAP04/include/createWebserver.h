@@ -37,6 +37,21 @@ void updateFromConfig(){
 
 }
 
+void configFromUpdate(){
+    if (currentPCAP == 1){
+        pcap1.update_config(webserverConfig);
+        writeConfigtoSD(config1,webserverConfig);
+    }
+    if (currentPCAP == 2){
+        pcap2.update_config(webserverConfig);
+        writeConfigtoSD(config2,webserverConfig);
+    }
+    if (currentPCAP == 3){
+        pcap3.update_config(webserverConfig);
+        writeConfigtoSD(config3,webserverConfig);
+    }
+}
+
 void selectedPCAP(Control* sender, int value)
 {
     switch (sender->value.toInt())
@@ -81,8 +96,7 @@ void SelectionCallback(Control* sender, int value)
             clockPeriod = 5;
         }
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 }
 
 void numberCall(Control* sender, int type)
@@ -100,8 +114,7 @@ void numberCall(Control* sender, int type)
     } else if (sender->id == webserverIDs.C_avrg){
         webserverConfig->C_AVRG = sender->value.toInt();
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 
     Serial.print("Number: ");
     Serial.println(sender->value);
@@ -134,8 +147,7 @@ void switchCallback(Control* sender, int value)
     if (portChange == true){
         webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
-    pcap1.update_config(webserverConfig);
-    writeConfigtoSD(config1,webserverConfig);
+    configFromUpdate();
 }
 
 
@@ -160,13 +172,26 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "PCAP 3", "3", ControlColor::Alizarin, webserverIDs.selectPCAP);
 
     // Tab0 - Status
-    webserverIDs.webResult0 = ESPUI.addControl(ControlType::Label, "Result 0","No data",ControlColor::Turquoise, tab0);
-    webserverIDs.webResult1 = ESPUI.addControl(ControlType::Label, "Result 1","No data",ControlColor::Turquoise, tab0);
-    webserverIDs.webResult2 = ESPUI.addControl(ControlType::Label, "Result 2","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult0_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult0_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
+    webserverIDs.webResult0_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
+    webserverIDs.webResult0_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
+    webserverIDs.webResult0_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
+    webserverIDs.webResult0_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
 
-    webserverIDs.medianResult0 = ESPUI.addControl(ControlType::Label, "Median result 0","No data",ControlColor::Turquoise, webserverIDs.webResult0);
-    webserverIDs.medianResult1 = ESPUI.addControl(ControlType::Label, "Median result 1","No data",ControlColor::Turquoise, webserverIDs.webResult1);
-    webserverIDs.medianResult2 = ESPUI.addControl(ControlType::Label, "Median result 2","No data",ControlColor::Turquoise, webserverIDs.webResult2);
+    webserverIDs.webResult1_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult1_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+
+    webserverIDs.webResult2_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult2_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
 
 
     // Tab1 - CDC Frontend

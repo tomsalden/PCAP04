@@ -1649,8 +1649,9 @@ pcap_status_t* PCAP04IIC::get_status(bool print_status){
     Serial.print(pcap_results_regs.STATUS0.REGVAL, BIN);Serial.print(" ");
     Serial.print(pcap_results_regs.STATUS1.REGVAL, BIN);Serial.print(" ");
     Serial.print(pcap_results_regs.STATUS2.REGVAL, BIN);Serial.print(" ");  
+    Serial.println();
   }
-  Serial.println();
+  
 
   return &pcap_status;
 

@@ -4,13 +4,26 @@
 
 struct webserverControlIDs
 {
-    uint16_t webResult0;
-    uint16_t webResult1;
-    uint16_t webResult2;
+    uint16_t webResult0_0;
+    uint16_t webResult0_1;
+    uint16_t webResult0_2;
+    uint16_t webResult0_3;
+    uint16_t webResult0_4;
+    uint16_t webResult0_5;
     
-    uint16_t medianResult0;
-    uint16_t medianResult1;
-    uint16_t medianResult2;
+    uint16_t webResult1_0;
+    uint16_t webResult1_1;
+    uint16_t webResult1_2;
+    uint16_t webResult1_3;
+    uint16_t webResult1_4;
+    uint16_t webResult1_5;
+    
+    uint16_t webResult2_0;
+    uint16_t webResult2_1;
+    uint16_t webResult2_2;
+    uint16_t webResult2_3;
+    uint16_t webResult2_4;
+    uint16_t webResult2_5;
 
     uint16_t STATUS;
     uint16_t selectPCAP;

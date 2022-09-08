@@ -9,64 +9,65 @@
 #include "FS.h"
 #include "SD.h"
 
-void setupConnection(){
-    const byte DNS_PORT = 53;
+void setupConnection()
+{
+  const byte DNS_PORT = 53;
 
-    WiFi.setHostname(hostname);
-    // try to connect to existing network
-    WiFi.begin(ssid, password);
-    Serial.print("\n\nTry to connect to existing network");
+  WiFi.setHostname(hostname);
+  // try to connect to existing network
+  WiFi.begin(ssid, password);
+  Serial.print("\n\nTry to connect to existing network");
 
+  {
+    uint8_t timeout = 10;
+
+    // Wait for connection, 5s timeout
+    do
     {
-        uint8_t timeout = 10;
+      delay(500);
+      Serial.print(".");
+      timeout--;
+    } while (timeout && WiFi.status() != WL_CONNECTED);
 
-        // Wait for connection, 5s timeout
-        do
-        {
-            delay(500);
-            Serial.print(".");
-            timeout--;
-        } while (timeout && WiFi.status() != WL_CONNECTED);
+    // not connected -> create hotspot
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print("\n\nCreating hotspot");
 
-        // not connected -> create hotspot
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            Serial.print("\n\nCreating hotspot");
-
-            WiFi.mode(WIFI_AP);
-            delay(100);
-            WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+      WiFi.mode(WIFI_AP);
+      delay(100);
+      WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 #if defined(ESP32)
-            uint32_t chipid = 0;
-            for (int i = 0; i < 17; i = i + 8)
-            {
-                chipid |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
-            }
+      uint32_t chipid = 0;
+      for (int i = 0; i < 17; i = i + 8)
+      {
+        chipid |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+      }
 #else
-            uint32_t chipid = ESP.getChipId();
+      uint32_t chipid = ESP.getChipId();
 #endif
-            char ap_ssid[25];
-            snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
-            WiFi.softAP(ap_ssid);
+      char ap_ssid[25];
+      snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
+      WiFi.softAP(ap_ssid);
 
-            timeout = 5;
+      timeout = 5;
 
-            do
-            {
-                delay(500);
-                Serial.print(".");
-                timeout--;
-            } while (timeout);
-        }
+      do
+      {
+        delay(500);
+        Serial.print(".");
+        timeout--;
+      } while (timeout);
     }
+  }
 
-    dnsServer.start(DNS_PORT, "*", apIP);
+  dnsServer.start(DNS_PORT, "*", apIP);
 
-    Serial.println("\n\nWiFi parameters:");
-    Serial.print("Mode: ");
-    Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
+  Serial.println("\n\nWiFi parameters:");
+  Serial.print("Mode: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
 }
 
 //SD functions
@@ -222,7 +223,7 @@ void SD_Initialise(){
     file = SD.open(fileName);
   }
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
+  writeFile(SD,fileName.c_str(),"time;PCAP 1-1;PCAP 1-2;PCAP 1-3;PCAP 1-4;PCAP 1-5;PCAP 1-6;PCAP 2-1;PCAP 2-2;PCAP 2-3;PCAP 2-4;PCAP 2-5;PCAP 2-6;PCAP 3-1;PCAP 3-2;PCAP 3-3;PCAP 3-4;PCAP 3-5;PCAP 3-6;\r\n");
   file.close();
 }
 
@@ -386,8 +387,19 @@ void otherSwitchExample(Control* sender, int value)
     Serial.println(sender->id);
 }
 
-void pcap_cdc_complete_callback(){
+void pcap1_cdc_complete_callback(){
   pcap1.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
+}
+
+void pcap2_cdc_complete_callback(){
+  pcap2.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
+}
+
+void pcap3_cdc_complete_callback(){
+  pcap3.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
 }
 
 void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config, unsigned char i2cAddress){
@@ -511,6 +523,104 @@ void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c
     Serial.println("Address change of PCAP04 failed!! Retrying to connect in 3 second");
     digitalWrite(ledR,HIGH);
     delay(3000);
+  }
+}
+
+void updateResults(PCAP04IIC * pcap, int pcapIndex){
+  digitalWrite(ledG, LOW);
+  digitalWrite(ledR, HIGH);
+  pcap_status = pcap->get_status(false);
+  pcap->cdc_complete_flag = false;
+  pcap_results = pcap->get_results();
+
+  current_micros = micros();
+  if (pcap_status->COMB_ERR){
+    Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
+    return;
+  }
+  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap_results->C0_over_CREF;
+  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap_results->C1_over_CREF;
+  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap_results->C2_over_CREF;
+  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap_results->C3_over_CREF;
+  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap_results->C4_over_CREF;
+  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap_results->C5_over_CREF;
+
+  resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
+  if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
+  {
+    resultIndexes[pcapIndex] = 0;
+  }
+  
+  newResults = true;
+  digitalWrite(ledR, LOW);
+}
+
+void printResults(){
+  if (pcap1_enable == true){
+    Serial.print("1st PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[0][i][resultIndexes[0]],9);
+    }
+    Serial.println("");
+  }
+  if (pcap2_enable == true){
+    Serial.print("2nd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[1][i][resultIndexes[1]],9);
+    }
+    Serial.println("");
+  }
+  if (pcap3_enable == true){
+    Serial.print("3rd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[2][i][resultIndexes[2]],9);
+    }
+    Serial.println("");
+  }
+}
+
+void writetoSD(){
+  if (SD_attached == true)
+  {
+    // Write to SD
+    dataMessage = String(current_micros) + ";";
+
+    for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){  //For all PCAP's
+      for (int j = 0; j < 6; j++){                           //For all results
+        dataMessage = dataMessage + String(resultArray[i][j][resultIndexes[i]], 9) + ";";
+      }
+    }
+    dataMessage = dataMessage + "\r\n";                       //Add a newline after the data
+    appendFile(SD, fileName.c_str(), dataMessage.c_str());    //Write the data to the SD file
+  }
+}
+
+void updateWebserverValues(){
+  if (current_micros > previous_micros + webTimeout)
+  {
+    // Set web interface
+    ESPUI.updateLabel(webserverIDs.webResult0_0, String(resultArray[0][0][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_1, String(resultArray[0][1][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_2, String(resultArray[0][2][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_3, String(resultArray[0][3][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_4, String(resultArray[0][4][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_5, String(resultArray[0][5][resultIndexes[0]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult1_0, String(resultArray[1][0][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_1, String(resultArray[1][1][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_2, String(resultArray[1][2][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_3, String(resultArray[1][3][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_4, String(resultArray[1][4][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_5, String(resultArray[1][5][resultIndexes[1]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult2_0, String(resultArray[2][0][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_1, String(resultArray[2][1][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_2, String(resultArray[2][2][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_3, String(resultArray[2][3][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_4, String(resultArray[2][4][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_5, String(resultArray[2][5][resultIndexes[2]], 9));
+
+    previous_micros = current_micros;
   }
 }
 

@@ -20,8 +20,8 @@ unsigned long previous_micros = 0;
 bool newResults = false;
 int resultIndexes[3] = {0,0,0};
 int medianIndexes[3] = {0,0,0};
-float resultArray[3][6][9];
-float medianArray[3][6][3];
+float resultArray[3][6][9] = { 0 };
+float medianArray[3][6][3] = { 0 };
 
 int resultIndex = 0;
 float result0[9];
@@ -133,6 +133,7 @@ void setup() {
 }
 
 void updateResults(PCAP04IIC * pcap, int pcapIndex){
+  pcapIndex = pcapIndex - 1;  //Make sure pcap1 has index 0, pcap2 index 1 and pcap3 index 2
   digitalWrite(ledR, HIGH);
   pcap_status = pcap->get_status(false);
   pcap->cdc_complete_flag = false;
@@ -143,15 +144,15 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex){
     Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
     return;
   }
-  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap1_results->C0_over_CREF;
-  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap1_results->C1_over_CREF;
-  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap1_results->C2_over_CREF;
-  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap1_results->C3_over_CREF;
-  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap1_results->C4_over_CREF;
-  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap1_results->C5_over_CREF;
+  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap_results->C0_over_CREF;
+  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap_results->C1_over_CREF;
+  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap_results->C2_over_CREF;
+  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap_results->C3_over_CREF;
+  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap_results->C4_over_CREF;
+  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap_results->C5_over_CREF;
 
   resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
-  if (resultIndexes[pcapIndex] > sizeof(resultIndexes[pcapIndex])/sizeof(int) - 1)
+  if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
   {
     resultIndexes[pcapIndex] = 0;
   }
@@ -160,56 +161,93 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex){
   digitalWrite(ledR, LOW);
 }
 
-void loop() {
-    if (pcap1.cdc_complete_flag){
-      updateResults(&pcap1,1);
-        
-        //Print for Excel
-        Serial.print(result0[resultIndex],9);
-        Serial.print(",");Serial.print(result1[resultIndex],9);
-        Serial.print(",");Serial.print(result2[resultIndex],9);
-
+void printResults(){
+  if (pcap1_enable == true){
+    Serial.print("1st PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[0][i][resultIndexes[0]],9);
     }
-
-    if (newResults != true){
-      return;
+    Serial.println("");
+  }
+  if (pcap2_enable == true){
+    Serial.print("2nd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[1][i][resultIndexes[1]],9);
     }
-
-    if (SD_attached == true)
-    {
-      // Write to SD
-      dataMessage = String(current_micros) + ";" + String(result0[resultIndex], 9) + ";" + String(result1[resultIndex], 9) + ";" + String(result2[resultIndex], 9) + "\r\n";
-      appendFile(SD, fileName.c_str(), dataMessage.c_str());
+    Serial.println("");
+  }
+  if (pcap3_enable == true){
+    Serial.print("3rd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[2][i][resultIndexes[2]],9);
     }
+    Serial.println("");
+  }
+}
 
-    if (current_micros > previous_micros + webTimeout)
-    {
-      // Set web interface
-      ESPUI.updateLabel(webserverIDs.webResult0, String(result0[resultIndex], 9));
-      ESPUI.updateLabel(webserverIDs.webResult1, String(result1[resultIndex], 9));
-      ESPUI.updateLabel(webserverIDs.webResult2, String(result2[resultIndex], 9));
+void writetoSD(){
+  if (SD_attached == true)
+  {
+    // Write to SD
+    dataMessage = String(current_micros) + ";";
 
-      // Filter the result with a median filter
-      medianResult0[medianIndex] = medianOrder(result0, 9);
-      medianResult1[medianIndex] = medianOrder(result1, 9);
-      medianResult2[medianIndex] = medianOrder(result2, 9);
-
-      ESPUI.updateLabel(webserverIDs.medianResult0, String((medianResult0[0] + medianResult0[1] + medianResult0[2]) / 3, 9));
-      ESPUI.updateLabel(webserverIDs.medianResult1, String((medianResult1[0] + medianResult1[1] + medianResult1[2]) / 3, 9));
-      ESPUI.updateLabel(webserverIDs.medianResult2, String((medianResult2[0] + medianResult2[1] + medianResult2[2]) / 3, 9));
-
-      medianIndex = medianIndex + 1;
-      if (medianIndex > 2)
-      {
-        medianIndex = 0;
+    for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){  //For all PCAP's
+      for (int j = 0; j < 6; j++){                           //For all results
+        dataMessage = dataMessage + String(resultArray[i][j][resultIndexes[i]], 9) + ";";
       }
-      previous_micros = current_micros;
     }
+    dataMessage = dataMessage + "\r\n";                       //Add a newline after the data
+    appendFile(SD, fileName.c_str(), dataMessage.c_str());    //Write the data to the SD file
+  }
+}
 
-    resultIndex = resultIndex + 1;
-    if (resultIndex > 8)
-    {
-      resultIndex = 0;
-    }
-    digitalWrite(ledR, LOW);
+void updateWebserverValues(){
+  if (current_micros > previous_micros + webTimeout)
+  {
+    // Set web interface
+    ESPUI.updateLabel(webserverIDs.webResult0, String(resultArray[0][0][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1, String(resultArray[0][1][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2, String(resultArray[0][2][resultIndexes[0]], 9));
+
+    // // Filter the result with a median filter
+    // medianResult0[medianIndex] = medianOrder(result0, 9);
+    // medianResult1[medianIndex] = medianOrder(result1, 9);
+    // medianResult2[medianIndex] = medianOrder(result2, 9);
+
+    // ESPUI.updateLabel(webserverIDs.medianResult0, String((medianResult0[0] + medianResult0[1] + medianResult0[2]) / 3, 9));
+    // ESPUI.updateLabel(webserverIDs.medianResult1, String((medianResult1[0] + medianResult1[1] + medianResult1[2]) / 3, 9));
+    // ESPUI.updateLabel(webserverIDs.medianResult2, String((medianResult2[0] + medianResult2[1] + medianResult2[2]) / 3, 9));
+
+    // medianIndex = medianIndex + 1;
+    // if (medianIndex > 2)
+    // {
+    //   medianIndex = 0;
+    // }
+    previous_micros = current_micros;
+  }
+}
+
+void loop() {
+  if (pcap1.cdc_complete_flag){
+    updateResults(&pcap1,1);
+  }
+  if (pcap2.cdc_complete_flag){
+    updateResults(&pcap2,2);
+  }
+  if (pcap3.cdc_complete_flag){
+    updateResults(&pcap3,3);
+  }
+
+  //If there are no new results, stop this loop and start over
+  if (newResults != true){
+    return;
+  }
+
+  //If there are new results, then print them and write thems to SD
+  digitalWrite(ledB, HIGH);
+  printResults();
+  writetoSD();
+  updateWebserverValues();
+  digitalWrite(ledB, LOW);
+  newResults = false;
 }

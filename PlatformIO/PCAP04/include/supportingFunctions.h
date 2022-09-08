@@ -526,4 +526,102 @@ void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c
   }
 }
 
+void updateResults(PCAP04IIC * pcap, int pcapIndex){
+  digitalWrite(ledG, LOW);
+  digitalWrite(ledR, HIGH);
+  pcap_status = pcap->get_status(false);
+  pcap->cdc_complete_flag = false;
+  pcap_results = pcap->get_results();
+
+  current_micros = micros();
+  if (pcap_status->COMB_ERR){
+    Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
+    return;
+  }
+  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap_results->C0_over_CREF;
+  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap_results->C1_over_CREF;
+  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap_results->C2_over_CREF;
+  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap_results->C3_over_CREF;
+  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap_results->C4_over_CREF;
+  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap_results->C5_over_CREF;
+
+  resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
+  if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
+  {
+    resultIndexes[pcapIndex] = 0;
+  }
+  
+  newResults = true;
+  digitalWrite(ledR, LOW);
+}
+
+void printResults(){
+  if (pcap1_enable == true){
+    Serial.print("1st PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[0][i][resultIndexes[0]],9);
+    }
+    Serial.println("");
+  }
+  if (pcap2_enable == true){
+    Serial.print("2nd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[1][i][resultIndexes[1]],9);
+    }
+    Serial.println("");
+  }
+  if (pcap3_enable == true){
+    Serial.print("3rd PCAP:");
+    for (int i = 0; i < 6; i++){
+      Serial.print("\t");Serial.print(resultArray[2][i][resultIndexes[2]],9);
+    }
+    Serial.println("");
+  }
+}
+
+void writetoSD(){
+  if (SD_attached == true)
+  {
+    // Write to SD
+    dataMessage = String(current_micros) + ";";
+
+    for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){  //For all PCAP's
+      for (int j = 0; j < 6; j++){                           //For all results
+        dataMessage = dataMessage + String(resultArray[i][j][resultIndexes[i]], 9) + ";";
+      }
+    }
+    dataMessage = dataMessage + "\r\n";                       //Add a newline after the data
+    appendFile(SD, fileName.c_str(), dataMessage.c_str());    //Write the data to the SD file
+  }
+}
+
+void updateWebserverValues(){
+  if (current_micros > previous_micros + webTimeout)
+  {
+    // Set web interface
+    ESPUI.updateLabel(webserverIDs.webResult0_0, String(resultArray[0][0][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_1, String(resultArray[0][1][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_2, String(resultArray[0][2][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_3, String(resultArray[0][3][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_4, String(resultArray[0][4][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_5, String(resultArray[0][5][resultIndexes[0]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult1_0, String(resultArray[1][0][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_1, String(resultArray[1][1][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_2, String(resultArray[1][2][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_3, String(resultArray[1][3][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_4, String(resultArray[1][4][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_5, String(resultArray[1][5][resultIndexes[1]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult2_0, String(resultArray[2][0][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_1, String(resultArray[2][1][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_2, String(resultArray[2][2][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_3, String(resultArray[2][3][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_4, String(resultArray[2][4][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_5, String(resultArray[2][5][resultIndexes[2]], 9));
+
+    previous_micros = current_micros;
+  }
+}
+
 #endif

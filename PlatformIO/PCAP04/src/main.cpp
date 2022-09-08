@@ -133,7 +133,7 @@ void setup() {
 }
 
 void updateResults(PCAP04IIC * pcap, int pcapIndex){
-  pcapIndex = pcapIndex - 1;  //Make sure pcap1 has index 0, pcap2 index 1 and pcap3 index 2
+  digitalWrite(ledG, LOW);
   digitalWrite(ledR, HIGH);
   pcap_status = pcap->get_status(false);
   pcap->cdc_complete_flag = false;
@@ -205,37 +205,40 @@ void updateWebserverValues(){
   if (current_micros > previous_micros + webTimeout)
   {
     // Set web interface
-    ESPUI.updateLabel(webserverIDs.webResult0, String(resultArray[0][0][resultIndexes[0]], 9));
-    ESPUI.updateLabel(webserverIDs.webResult1, String(resultArray[0][1][resultIndexes[0]], 9));
-    ESPUI.updateLabel(webserverIDs.webResult2, String(resultArray[0][2][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_0, String(resultArray[0][0][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_1, String(resultArray[0][1][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_2, String(resultArray[0][2][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_3, String(resultArray[0][3][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_4, String(resultArray[0][4][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_5, String(resultArray[0][5][resultIndexes[0]], 9));
 
-    // // Filter the result with a median filter
-    // medianResult0[medianIndex] = medianOrder(result0, 9);
-    // medianResult1[medianIndex] = medianOrder(result1, 9);
-    // medianResult2[medianIndex] = medianOrder(result2, 9);
+    ESPUI.updateLabel(webserverIDs.webResult1_0, String(resultArray[1][0][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_1, String(resultArray[1][1][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_2, String(resultArray[1][2][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_3, String(resultArray[1][3][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_4, String(resultArray[1][4][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_5, String(resultArray[1][5][resultIndexes[1]], 9));
 
-    // ESPUI.updateLabel(webserverIDs.medianResult0, String((medianResult0[0] + medianResult0[1] + medianResult0[2]) / 3, 9));
-    // ESPUI.updateLabel(webserverIDs.medianResult1, String((medianResult1[0] + medianResult1[1] + medianResult1[2]) / 3, 9));
-    // ESPUI.updateLabel(webserverIDs.medianResult2, String((medianResult2[0] + medianResult2[1] + medianResult2[2]) / 3, 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_0, String(resultArray[2][0][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_1, String(resultArray[2][1][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_2, String(resultArray[2][2][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_3, String(resultArray[2][3][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_4, String(resultArray[2][4][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_5, String(resultArray[2][5][resultIndexes[2]], 9));
 
-    // medianIndex = medianIndex + 1;
-    // if (medianIndex > 2)
-    // {
-    //   medianIndex = 0;
-    // }
     previous_micros = current_micros;
   }
 }
 
 void loop() {
   if (pcap1.cdc_complete_flag){
-    updateResults(&pcap1,1);
+    updateResults(&pcap1,0);
   }
   if (pcap2.cdc_complete_flag){
-    updateResults(&pcap2,2);
+    updateResults(&pcap2,1);
   }
   if (pcap3.cdc_complete_flag){
-    updateResults(&pcap3,3);
+    updateResults(&pcap3,2);
   }
 
   //If there are no new results, stop this loop and start over

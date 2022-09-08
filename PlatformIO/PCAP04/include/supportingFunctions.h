@@ -223,7 +223,7 @@ void SD_Initialise(){
     file = SD.open(fileName);
   }
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time;Results0;Results1;Results2\r\n");
+  writeFile(SD,fileName.c_str(),"time;PCAP 1-1;PCAP 1-2;PCAP 1-3;PCAP 1-4;PCAP 1-5;PCAP 1-6;PCAP 2-1;PCAP 2-2;PCAP 2-3;PCAP 2-4;PCAP 2-5;PCAP 2-6;PCAP 3-1;PCAP 3-2;PCAP 3-3;PCAP 3-4;PCAP 3-5;PCAP 3-6;\r\n");
   file.close();
 }
 
@@ -389,14 +389,17 @@ void otherSwitchExample(Control* sender, int value)
 
 void pcap1_cdc_complete_callback(){
   pcap1.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
 }
 
 void pcap2_cdc_complete_callback(){
   pcap2.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
 }
 
 void pcap3_cdc_complete_callback(){
   pcap3.cdc_complete_flag = true;
+  digitalWrite(ledG,HIGH);
 }
 
 void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config, unsigned char i2cAddress){

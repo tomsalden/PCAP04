@@ -1,13 +1,18 @@
-#ifndef createWebserver_h
-#define createWebserver_h
+#include "webserverFunctions.h"
 
-#include <ESPUI.h>
-#include "supportingFunctions.h"
-#include "definitions.h"
+#include <Arduino.h>
+#include <DNSServer.h>
+#include <WiFi.h>
+
+#include "prog_globals.h"
+#include "prog_types.h"
+
+webserverControlIDs webserverIDs;
+pcap_config_t* webserverConfig;
 
 int currentPCAP = 1;
 float clockPeriod = 20;
-pcap_config_t* webserverConfig;
+unsigned long webTimeout = 5000000;
 
 void updateFromConfig(){
     webserverConfig = &Config_PCAP_1;
@@ -52,8 +57,36 @@ void configFromUpdate(){
     }
 }
 
-void selectedPCAP(Control* sender, int value)
-{
+void updateWebserverValues(){
+  if (current_micros > previous_micros + webTimeout)
+  {
+    // Set web interface
+    ESPUI.updateLabel(webserverIDs.webResult0_0, String(resultArray[0][0][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_1, String(resultArray[0][1][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_2, String(resultArray[0][2][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_3, String(resultArray[0][3][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_4, String(resultArray[0][4][resultIndexes[0]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult0_5, String(resultArray[0][5][resultIndexes[0]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult1_0, String(resultArray[1][0][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_1, String(resultArray[1][1][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_2, String(resultArray[1][2][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_3, String(resultArray[1][3][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_4, String(resultArray[1][4][resultIndexes[1]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult1_5, String(resultArray[1][5][resultIndexes[1]], 9));
+
+    ESPUI.updateLabel(webserverIDs.webResult2_0, String(resultArray[2][0][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_1, String(resultArray[2][1][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_2, String(resultArray[2][2][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_3, String(resultArray[2][3][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_4, String(resultArray[2][4][resultIndexes[2]], 9));
+    ESPUI.updateLabel(webserverIDs.webResult2_5, String(resultArray[2][5][resultIndexes[2]], 9));
+
+    previous_micros = current_micros;
+  }
+}
+
+void selectedPCAP(Control* sender, int value){
     switch (sender->value.toInt())
     {
     case 1:
@@ -69,8 +102,7 @@ void selectedPCAP(Control* sender, int value)
     updateFromConfig();
 }
 
-void SelectionCallback(Control* sender, int value)
-{
+void SelectionCallback(Control* sender, int value){
     if (sender->id == webserverIDs.MEAS_SCHEME){
         webserverConfig->C_DIFFERENTIAL = ((sender->value.toInt() >> 1) & 1);
         webserverConfig->C_FLOATING = (sender->value.toInt() & 1);
@@ -98,9 +130,7 @@ void SelectionCallback(Control* sender, int value)
     }
     configFromUpdate();
 }
-
-void numberCall(Control* sender, int type)
-{
+void numberCall(Control* sender, int type){
     if (sender->id == webserverIDs.t_precharge){
         ESPUI.updateLabel(webserverIDs.t_pre_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
     } else if (sender->id == webserverIDs.t_fullcharge){
@@ -118,10 +148,8 @@ void numberCall(Control* sender, int type)
 
     Serial.print("Number: ");
     Serial.println(sender->value);
-}
-
-void switchCallback(Control* sender, int value)
-{
+}       
+void switchCallback(Control* sender, int value){
     bool portChange = false;
     int switchId = 0;
     if (sender->id == webserverIDs.PORT_SELECT0){
@@ -148,9 +176,72 @@ void switchCallback(Control* sender, int value)
         webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
     configFromUpdate();
+} 
+
+
+
+void setupConnection(String ssid, String password, String hostname)
+{
+    DNSServer dnsServer;
+    IPAddress apIP(192, 168, 4, 1);
+    const byte DNS_PORT = 53;
+
+  WiFi.setHostname(hostname.c_str());
+  // try to connect to existing network
+  WiFi.begin(ssid.c_str(), password.c_str());
+  Serial.print("\n\nTry to connect to existing network");
+
+  {
+    uint8_t timeout = 10;
+
+    // Wait for connection, 5s timeout
+    do
+    {
+      delay(500);
+      Serial.print(".");
+      timeout--;
+    } while (timeout && WiFi.status() != WL_CONNECTED);
+
+    // not connected -> create hotspot
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print("\n\nCreating hotspot");
+
+      WiFi.mode(WIFI_AP);
+      delay(100);
+      WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+#if defined(ESP32)
+      uint32_t chipid = 0;
+      for (int i = 0; i < 17; i = i + 8)
+      {
+        chipid |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+      }
+#else
+      uint32_t chipid = ESP.getChipId();
+#endif
+      char ap_ssid[25];
+      snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
+      WiFi.softAP(ap_ssid);
+
+      timeout = 5;
+
+      do
+      {
+        delay(500);
+        Serial.print(".");
+        timeout--;
+      } while (timeout);
+    }
+  }
+
+  dnsServer.start(DNS_PORT, "*", apIP);
+
+  Serial.println("\n\nWiFi parameters:");
+  Serial.print("Mode: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? "Station" : "Client");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP());
 }
-
-
 
 void setupWebserver(){
     //Create different tabs
@@ -265,5 +356,3 @@ void setupWebserver(){
 
     updateFromConfig();
 }
-
-#endif

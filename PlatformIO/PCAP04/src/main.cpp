@@ -1,61 +1,46 @@
 #include <Arduino.h>
 #include "pcap04IIC.h"
-#include <Wire.h>
-#include <ArduinoJson.h>
-#include "definitions.h"
-#include "createWebserver.h"
-#include "supportingFunctions.h"
 
-//Libraries for SD card
-#include <SPI.h>
-#include "FS.h"
-#include "SD.h"
+#include "prog_types.h"
+#include "prog_globals.h"
+#include "prog_defines.h"
 
-#include <DNSServer.h>
-#include <WiFi.h>
+#include "SDFunctions.h"
+#include "webserverFunctions.h"
+#include "PCAP04Functions.h"
+
+
+//Default wifi connection settings
+String ssid = "LapTom";
+String password = "1234567890";
+String hostname = "espui";
+
+bool SD_attached = false;
+const char* config1 = "/configPCAP1.txt";
+const char* config2 = "/configPCAP2.txt";
+const char* config3 = "/configPCAP3.txt";
+
+bool pcap1_enable = true;
+bool pcap2_enable = false;
+bool pcap3_enable = false;
+
+pcap_config_t Config_PCAP_1;
+pcap_config_t Config_PCAP_2;
+pcap_config_t Config_PCAP_3;
+
+PCAP04IIC pcap1(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_1);
+PCAP04IIC pcap2(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_2);
+PCAP04IIC pcap3(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_3);
 
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
 
-bool newResults = false;
 int resultIndexes[3] = {0,0,0};
-int medianIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
-float medianArray[3][6][3] = { 0 };
-
-int resultIndex = 0;
-float result0[9];
-float result1[9];
-float result2[9];
-
-int medianIndex = 0;
-float medianResult0[3];
-float medianResult1[3];
-float medianResult2[3];
-
-String dataMessage;
-
-uint16_t button1;
-uint16_t switchOne;
-uint16_t status;
-uint16_t selectPCAP;
-
-DynamicJsonDocument results_json(1024);
-//pcap_config_handler_t metsensor_pcap_config_handler;
-
-pcap_results_t* pcap1_results;
-pcap_status_t* pcap1_status;
-
-pcap_results_t* pcap_results;
-pcap_status_t* pcap_status;
-
+bool newResults = false;
 
 void setup() {
-  pcap1_enable = true;
-  pcap2_enable = false;
-  pcap3_enable = false;
   //Startup esp32 and begin serial connection
-  delay(100);
   Serial.begin(115200);
   Serial.println("ESP32 has started, initialising connection...");
 
@@ -67,19 +52,16 @@ void setup() {
   pinMode(pcap1_int, INPUT);
 
   digitalWrite(powerLed,HIGH);
-
-  //Connect to a wifi network or setup a hotspot if a network is not available
-  setupConnection();
+  setupConnection(ssid, password, hostname);
   setupWebserver();
 
   //Setup the webserver and show that the device is initialising
   ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
   ESPUI.begin("ESPUI Control");
-  
+
   //Initialise the SD-card
   delay(100);
   SD_Initialise();
-
   //Initialise the PCAP chips (only the ones that are enabled)
   if (pcap1_enable == true){
     Serial.println("Initializing 1st PCAP");

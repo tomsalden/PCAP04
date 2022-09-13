@@ -267,7 +267,7 @@ struct pcap_results_t
     float C5_over_CREF;
     float PT1_over_PTREF;
     float PTInternal_over_PTREF;
-}pcap_results_packed;
+};
 #endif
 #ifdef PCAP_MEASUREMENT_MODE_STANDARD_FLOATING
 struct pcap_results_t

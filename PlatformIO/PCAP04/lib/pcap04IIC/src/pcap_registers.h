@@ -1571,7 +1571,7 @@ struct __PCAP_RESULTS_REGS_T
     PCAP_REG_STATUS0_T STATUS0 = {.REGVAL = 0};
     PCAP_REG_STATUS1_T STATUS1 = {.REGVAL = 0};
     PCAP_REG_STATUS2_T STATUS2 = {.REGVAL = 0};
-}RESULT_REGS_packed;
+};
 
 struct __PCAP_CONFIG_REGS_T 
 {
@@ -1639,24 +1639,24 @@ struct __PCAP_CONFIG_REGS_T
     PCAP_REG_CFG61_T CFG61 = {.REGVAL = 0};
     PCAP_REG_CFG62_T CFG62 = {.REGVAL = 0};
     PCAP_REG_CFG63_T CFG63 = {.REGVAL = 0};
-}CONFIG_REGS_packed;
+};
 
 typedef __PCAP_CONFIG_REGS_T* pcap_config_handler_t;
 
 struct __PCAP_FW_T
 {
     unsigned char data[PCAP_NVRAM_FW_SIZE];
-}_FW_packed;
+};
 
 struct __PCAP_FW_CAL0_T
 {
     unsigned char data[PCAP_NVRAM_FW_CAL0_SIZE];
-}_FW_CAL0_packed;
+};
 
 struct __PCAP_FW_CAL1_T
 {
     unsigned char data[PCAP_NVRAM_FW_CAL1_SIZE];
-}_FW_CAL1_packed;
+};
 
 struct __PCAP_NVRAM_T 
 {
@@ -1664,6 +1664,6 @@ struct __PCAP_NVRAM_T
     __PCAP_FW_CAL0_T FW_CAL0;
     __PCAP_FW_CAL1_T FW_CAL1;
     __PCAP_CONFIG_REGS_T CFG;
-}PCAP_NVRAM_packed;
+};
 
 #endif

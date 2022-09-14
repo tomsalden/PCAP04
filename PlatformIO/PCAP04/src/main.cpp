@@ -9,32 +9,41 @@
 #include "webserverFunctions.h"
 #include "PCAP04Functions.h"
 
+//------------Parameters------------//
 
 //Default wifi connection settings
 String ssid = "LapTom";
 String password = "1234567890";
 String hostname = "espui";
 
+//SD and configuration settings
 bool SD_attached = false;
 const char* config1 = "/configPCAP1.txt";
 const char* config2 = "/configPCAP2.txt";
 const char* config3 = "/configPCAP3.txt";
 
+//Enable PCAP devices
 bool pcap1_enable = true;
 bool pcap2_enable = false;
 bool pcap3_enable = false;
 
+//------------Variables------------//
+
+//Configuration structures for each PCAP
 pcap_config_t Config_PCAP_1;
 pcap_config_t Config_PCAP_2;
 pcap_config_t Config_PCAP_3;
 
+//Initialisation of each PCAP chip
 PCAP04IIC pcap1(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_1);
 PCAP04IIC pcap2(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_2);
 PCAP04IIC pcap3(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,defaultAddress,Config_PCAP_3);
 
+//Variables to print the time on SD and keep a correct timeout for the webserver
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
 
+//Arrays for the results
 int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
 bool newResults = false;
@@ -62,6 +71,7 @@ void setup() {
   //Initialise the SD-card
   delay(100);
   SD_Initialise();
+
   //Initialise the PCAP chips (only the ones that are enabled)
   if (pcap1_enable == true){
     Serial.println("Initializing 1st PCAP");
@@ -87,6 +97,7 @@ void setup() {
     ESPUI.updateLabel(webserverIDs.STATUS,"3rd PCAP04 has been initialised");
   }
 
+  //Show that the chips are initialised
   ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Loading correct config");
   digitalWrite(ledB, LOW);
   digitalWrite(ledG, HIGH);
@@ -109,12 +120,13 @@ void setup() {
     readConfigfromSD(config3,&Config_PCAP_3);
     pcap3.update_config(&Config_PCAP_3);
   }
+  //Update webserver to show correct configuration
   updateFromConfig();
-
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
 }
 
 void loop() {
+  //Check if new results are triggered by the interrupt pin
   if (pcap1.cdc_complete_flag){
     updateResults(&pcap1,0);
   }

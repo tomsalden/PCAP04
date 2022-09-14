@@ -124,6 +124,7 @@ void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c
     delay(3000);
   }
 
+  //Connection has been made begin initialisation sequence
   Serial.println("\n Initialising PCAP04");
   digitalWrite(ledR,LOW);
   digitalWrite(ledB,HIGH);
@@ -132,13 +133,14 @@ void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c
   pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
   pcap->initializeIIC();
 
-
+  //Change the I2C address from default to the correct address of the PCAP
   pcap_addr_conf = pcap_addr & 0b011;       //Apply the new address in the configuration
   Serial.println("Changing address to " + (String)pcap_addr);
   pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
   pcap->send_command(CDC_START);
   pcap->update_address(pcap_addr);
 
+  //Test the connection again, see if the address change was successfull
   while (pcap->test_connection() == false){
     Serial.println("Address change of PCAP04 failed!! Retrying to connect in 3 second");
     digitalWrite(ledR,HIGH);

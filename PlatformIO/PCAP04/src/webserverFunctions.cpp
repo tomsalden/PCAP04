@@ -6,6 +6,7 @@
 
 #include "prog_globals.h"
 #include "prog_types.h"
+#include "prog_defines.h"
 
 webserverControlIDs webserverIDs;
 pcap_config_t* webserverConfig;
@@ -44,16 +45,22 @@ void updateFromConfig(){
 
 void configFromUpdate(){
     if (currentPCAP == 1){
+        digitalWrite(pcap1_i2c, HIGH);
         pcap1.update_config(webserverConfig);
         writeConfigtoSD(config1,webserverConfig);
+        digitalWrite(pcap1_i2c, LOW);
     }
     if (currentPCAP == 2){
+        digitalWrite(pcap2_i2c, HIGH);
         pcap2.update_config(webserverConfig);
         writeConfigtoSD(config2,webserverConfig);
+        digitalWrite(pcap2_i2c, LOW);
     }
     if (currentPCAP == 3){
+        digitalWrite(pcap3_i2c, HIGH);
         pcap3.update_config(webserverConfig);
         writeConfigtoSD(config3,webserverConfig);
+        digitalWrite(pcap3_i2c, LOW);
     }
 }
 

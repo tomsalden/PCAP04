@@ -6,7 +6,7 @@
 #define pcap2_i2c 14        //I2C enable pin for 2nd PCAP
 #define pcap3_i2c 15        //I2C enable pin for 3rd PCAP
 
-#define pcap1_int 2 //27        //DataIsReady from 1st PC
+#define pcap1_int 27        //DataIsReady from 1st PC
 #define pcap2_int 26        //DataIsReady from 2nd PCAP
 #define pcap3_int 04        //DataIsReady from 3rd PCAP
 

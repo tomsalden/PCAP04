@@ -24,8 +24,8 @@ const char* config3 = "/configPCAP3.txt";
 
 //Enable PCAP devices
 bool pcap1_enable = true;
-bool pcap2_enable = false;
-bool pcap3_enable = false;
+bool pcap2_enable = true;
+bool pcap3_enable = true;
 
 //------------Variables------------//
 
@@ -59,6 +59,18 @@ void setup() {
   pinMode(ledG, OUTPUT);
   pinMode(ledB, OUTPUT);
   pinMode(pcap1_int, INPUT);
+  pinMode(pcap2_int, INPUT);
+  pinMode(pcap3_int, INPUT);
+
+  //Make sure all PCAP chips are disabled
+  pinMode(pcap1_i2c, OUTPUT);
+  pinMode(pcap2_i2c, OUTPUT);
+  pinMode(pcap3_i2c, OUTPUT);
+
+  digitalWrite(pcap1_i2c, LOW);
+  digitalWrite(pcap2_i2c, LOW);
+  digitalWrite(pcap3_i2c, LOW);
+
 
   digitalWrite(powerLed,HIGH);
   setupConnection(ssid, password, hostname);
@@ -79,7 +91,12 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(pcap1_int),pcap1_cdc_complete_callback,FALLING);
     Serial.println("1st PCAP04 has been connected and is initialised");
     ESPUI.updateLabel(webserverIDs.STATUS,"1st PCAP04 has been initialised");
+    delay(300);
   }
+
+  digitalWrite(pcap1_i2c, LOW);
+  digitalWrite(pcap2_i2c, LOW);
+  digitalWrite(pcap3_i2c, LOW);
 
   if (pcap2_enable == true){
     Serial.println("Initializing 2nd PCAP");
@@ -87,7 +104,12 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(pcap2_int),pcap2_cdc_complete_callback,FALLING);
     Serial.println("2nd PCAP04 has been connected and is initialised");
     ESPUI.updateLabel(webserverIDs.STATUS,"2nd PCAP04 has been initialised");
+    delay(300);
   }
+
+  digitalWrite(pcap1_i2c, LOW);
+  digitalWrite(pcap2_i2c, LOW);
+  digitalWrite(pcap3_i2c, LOW);
 
   if (pcap3_enable == true){
     Serial.println("Initializing 3rd PCAP");
@@ -95,7 +117,9 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(pcap3_int),pcap3_cdc_complete_callback,FALLING);
     Serial.println("3rd PCAP04 has been connected and is initialised");
     ESPUI.updateLabel(webserverIDs.STATUS,"3rd PCAP04 has been initialised");
+    delay(300);
   }
+
 
   //Show that the chips are initialised
   ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Loading correct config");
@@ -106,19 +130,25 @@ void setup() {
   //Start the first readout. Then the chip continues
   //Read and apply the configuration from the SD card
   if (pcap1_enable == true){
+    digitalWrite(pcap1_i2c, HIGH);
     pcap1.cdc_complete_flag = true; 
     readConfigfromSD(config1,&Config_PCAP_1);
     pcap1.update_config(&Config_PCAP_1);
+    delay(300);
   }
   if (pcap2_enable == true){
+    digitalWrite(pcap2_i2c, HIGH);
     pcap2.cdc_complete_flag = true;
     readConfigfromSD(config2,&Config_PCAP_2);
     pcap2.update_config(&Config_PCAP_2);
+    delay(300);
   }
   if (pcap3_enable == true){
+    digitalWrite(pcap3_i2c, HIGH);
     pcap3.cdc_complete_flag = true;
     readConfigfromSD(config3,&Config_PCAP_3);
     pcap3.update_config(&Config_PCAP_3);
+    delay(300);
   }
   //Update webserver to show correct configuration
   updateFromConfig();
@@ -128,13 +158,13 @@ void setup() {
 void loop() {
   //Check if new results are triggered by the interrupt pin
   if (pcap1.cdc_complete_flag){
-    updateResults(&pcap1,0);
+    updateResults(&pcap1,0,pcap1_i2c);
   }
   if (pcap2.cdc_complete_flag){
-    updateResults(&pcap2,1);
+    updateResults(&pcap2,1,pcap2_i2c);
   }
   if (pcap3.cdc_complete_flag){
-    updateResults(&pcap3,2);
+    updateResults(&pcap3,2,pcap3_i2c);
   }
 
   //If there are no new results, stop this loop and start over

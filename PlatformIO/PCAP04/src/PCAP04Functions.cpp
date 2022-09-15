@@ -103,9 +103,8 @@ void pcap04_configure_registers(PCAP04IIC &pcap, pcap_config_t * pcap_config, un
 
 void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c, unsigned char pcap_addr){
   int pcap_addr_conf = 0x00;
-
+  pcap->update_address(defaultAddress);
   //Enable I2C on the selected device
-  pinMode(pcap_i2c, OUTPUT);
   digitalWrite(pcap_i2c, HIGH);
 
 
@@ -133,48 +132,55 @@ void initialisePCAP(PCAP04IIC * pcap, pcap_config_t * configuration,int pcap_i2c
   pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
   pcap->initializeIIC();
 
-  //Change the I2C address from default to the correct address of the PCAP
-  pcap_addr_conf = pcap_addr & 0b011;       //Apply the new address in the configuration
-  Serial.println("Changing address to " + (String)pcap_addr);
-  pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
-  pcap->send_command(CDC_START);
-  pcap->update_address(pcap_addr);
+  // //Change the I2C address from default to the correct address of the PCAP
+  // pcap_addr_conf = pcap_addr & 0b011;       //Apply the new address in the configuration
+  // Serial.println("Changing address to " + (String)pcap_addr);
+  // pcap04_configure_registers(*pcap, configuration,pcap_addr_conf);
+  // pcap->send_command(CDC_START);
+  // pcap->update_address(pcap_addr);
 
-  //Test the connection again, see if the address change was successfull
-  while (pcap->test_connection() == false){
-    Serial.println("Address change of PCAP04 failed!! Retrying to connect in 3 second");
-    digitalWrite(ledR,HIGH);
-    delay(3000);
-  }
+  // //Test the connection again, see if the address change was successfull
+  // while (pcap->test_connection() == false){
+  //   Serial.println("Address change of PCAP04 failed!! Retrying to connect in 3 second");
+  //   digitalWrite(ledR,HIGH);
+  //   delay(3000);
+  // }
+  digitalWrite(pcap_i2c, LOW);
 }
 
-void updateResults(PCAP04IIC * pcap, int pcapIndex){
+void updateResults(PCAP04IIC * pcap, int pcapIndex, int pcap_i2c){
+  digitalWrite(pcap_i2c, HIGH);
   digitalWrite(ledG, LOW);
   digitalWrite(ledR, HIGH);
   pcap_status = pcap->get_status(false);
   pcap->cdc_complete_flag = false;
   pcap_results = pcap->get_results();
 
+  // Serial.print("PCAP "+ (String)pcapIndex + ": ");
+  // Serial.println(pcap_results->C1_over_CREF);
+
   current_micros = micros();
   if (pcap_status->COMB_ERR){
     Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
     return;
   }
-  resultArray[pcapIndex][0][resultIndexes[pcapIndex]] = pcap_results->C0_over_CREF;
-  resultArray[pcapIndex][1][resultIndexes[pcapIndex]] = pcap_results->C1_over_CREF;
-  resultArray[pcapIndex][2][resultIndexes[pcapIndex]] = pcap_results->C2_over_CREF;
-  resultArray[pcapIndex][3][resultIndexes[pcapIndex]] = pcap_results->C3_over_CREF;
-  resultArray[pcapIndex][4][resultIndexes[pcapIndex]] = pcap_results->C4_over_CREF;
-  resultArray[pcapIndex][5][resultIndexes[pcapIndex]] = pcap_results->C5_over_CREF;
+  resultArray[pcapIndex][0][0] = pcap_results->C0_over_CREF;
+  resultArray[pcapIndex][1][0] = pcap_results->C1_over_CREF;
+  resultArray[pcapIndex][2][0] = pcap_results->C2_over_CREF;
+  resultArray[pcapIndex][3][0] = pcap_results->C3_over_CREF;
+  resultArray[pcapIndex][4][0] = pcap_results->C4_over_CREF;
+  resultArray[pcapIndex][5][0] = pcap_results->C5_over_CREF;
 
-  resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
-  if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
-  {
-    resultIndexes[pcapIndex] = 0;
-  }
+  //resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
+  // if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
+  // {
+  //   resultIndexes[pcapIndex] = 0;
+  // }
   
   newResults = true;
   digitalWrite(ledR, LOW);
+  digitalWrite(pcap_i2c, LOW);
+  delay(300);
 }
 
 
@@ -182,22 +188,23 @@ void printResults(){
   if (pcap1_enable == true){
     Serial.print("1st PCAP:");
     for (int i = 0; i < 6; i++){
-      Serial.print("\t");Serial.print(resultArray[0][i][resultIndexes[0]],9);
+      Serial.print("\t");Serial.print(resultArray[0][i][0],9);
     }
     Serial.println("");
   }
   if (pcap2_enable == true){
     Serial.print("2nd PCAP:");
     for (int i = 0; i < 6; i++){
-      Serial.print("\t");Serial.print(resultArray[1][i][resultIndexes[1]],9);
+      Serial.print("\t");Serial.print(resultArray[1][i][0],9);
     }
     Serial.println("");
   }
   if (pcap3_enable == true){
     Serial.print("3rd PCAP:");
     for (int i = 0; i < 6; i++){
-      Serial.print("\t");Serial.print(resultArray[2][i][resultIndexes[2]],9);
+      Serial.print("\t");Serial.print(resultArray[2][i][0],9);
     }
     Serial.println("");
   }
+  Serial.println("");
 }

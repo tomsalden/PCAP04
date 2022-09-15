@@ -4672,7 +4672,7 @@
   (symbol (lib_id "power:+6V") (at 110.49 179.07 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid b3c805f6-a8eb-405a-922b-604cfb8b773c)
-    (property "Reference" "#PWR?" (id 0) (at 110.49 182.88 0)
+    (property "Reference" "#PWR0105" (id 0) (at 110.49 182.88 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+6V" (id 1) (at 110.49 173.99 0))
@@ -5686,7 +5686,7 @@
       (reference "#PWR0104") (unit 1) (value "GND") (footprint "")
     )
     (path "/b3c805f6-a8eb-405a-922b-604cfb8b773c"
-      (reference "#PWR?") (unit 1) (value "+6V") (footprint "")
+      (reference "#PWR0105") (unit 1) (value "+6V") (footprint "")
     )
     (path "/5138298e-c4e5-4c8d-ac1b-c9637b29d4c5"
       (reference "C1") (unit 1) (value "2p") (footprint "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder")

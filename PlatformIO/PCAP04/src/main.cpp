@@ -18,6 +18,7 @@ String hostname = "espui";
 
 //SD and configuration settings
 bool SD_attached = false;
+const char* generalConfig = "/generalConfiguration.txt";
 const char* config1 = "/configPCAP1.txt";
 const char* config2 = "/configPCAP2.txt";
 const char* config3 = "/configPCAP3.txt";
@@ -72,6 +73,10 @@ void setup() {
   digitalWrite(pcap3_i2c, LOW);
 
 
+  //Initialise the SD-card
+  delay(100);
+  SD_Initialise();
+
   digitalWrite(powerLed,HIGH);
   setupConnection(ssid, password, hostname);
   setupWebserver();
@@ -79,10 +84,6 @@ void setup() {
   //Setup the webserver and show that the device is initialising
   ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
   ESPUI.begin("ESPUI Control");
-
-  //Initialise the SD-card
-  delay(100);
-  SD_Initialise();
 
   //Initialise the PCAP chips (only the ones that are enabled)
   if (pcap1_enable == true){

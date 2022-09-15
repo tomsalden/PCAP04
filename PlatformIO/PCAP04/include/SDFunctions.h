@@ -12,6 +12,9 @@ void writetoSD();
 void writeConfigtoSD(const char* configname,pcap_config_t * config);
 void readConfigfromSD(const char* configname, pcap_config_t *config);
 
+void writeGeneralConfig(const char* configname);
+void readGeneralConfig(const char* configname);
+
 void SD_Initialise();
 
 #endif

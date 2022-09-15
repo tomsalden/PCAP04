@@ -134,6 +134,62 @@ void readConfigfromSD(const char* configname, pcap_config_t *config){
   configfile.close();
 }
 
+void writeGeneralConfig(const char* configname){
+  if (SD_attached == false){//Don't write anything if there is no SD card attached
+    return;
+  }
+  Serial.println("Writing configuration to SD card");
+  File configfile = SD.open(configname,FILE_WRITE);
+  if ( !configfile.seek(0) ){
+    Serial.print("Unable to set seek: ");
+    return;
+  }
+  configfile.close();
+
+  String dataMessage = "General configuration for readout board\n";
+  writeFile(SD, configname, dataMessage.c_str());
+
+  dataMessage = 
+  "ssid =" + ssid                  + "\n" + 
+  "password =" + password          + "\n" + 
+  "hostname =" + hostname          + "\n" ;
+  
+  appendFile(SD, configname, dataMessage.c_str());
+}
+
+void readGeneralConfig(const char* configname){
+  //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
+  if (SD_attached == false){ //Don't read anything if there is no SD card attached
+    return;
+  }
+
+  Serial.println("Read configuration from SD card, if file exits. Otherwise create new config file");
+
+  //If the file does not exist, create a new one and write the basic configuration on it
+  File configfile = SD.open(configname,FILE_READ);
+  if ( !configfile ){
+    configfile.close();
+    Serial.println("File does not exist, creating file...");
+    writeFile(SD,configname,"");
+    writeGeneralConfig(configname); //Write the basic config in the file
+    //return;
+    configfile = SD.open(configname,FILE_READ);
+  }
+  String buffer;
+  //Read first line
+  buffer = configfile.readStringUntil('\n');
+  buffer = configfile.readStringUntil('='); //"ssid ="
+  ssid = configfile.readStringUntil('\n');
+
+  buffer = configfile.readStringUntil('='); //"password ="
+  password = configfile.readStringUntil('\n');
+
+  buffer = configfile.readStringUntil('='); //"hostname ="
+  hostname = configfile.readStringUntil('\n');
+
+  configfile.close();
+}
+
 void SD_Initialise(){
   Serial.println("Mounting SD-Card");
   SD.begin(SD_CS);
@@ -172,4 +228,7 @@ void SD_Initialise(){
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
   writeFile(SD,fileName.c_str(),"time;PCAP 1-1;PCAP 1-2;PCAP 1-3;PCAP 1-4;PCAP 1-5;PCAP 1-6;PCAP 2-1;PCAP 2-2;PCAP 2-3;PCAP 2-4;PCAP 2-5;PCAP 2-6;PCAP 3-1;PCAP 3-2;PCAP 3-3;PCAP 3-4;PCAP 3-5;PCAP 3-6;\r\n");
   file.close();
+
+  //Read the general configuration
+  readGeneralConfig(generalConfig);
 }

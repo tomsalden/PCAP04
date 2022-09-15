@@ -21,6 +21,7 @@ extern PCAP04IIC pcap3;
 
 //Variables for configurations
 extern bool SD_attached;
+extern const char* generalConfig;
 extern const char* config1;
 extern const char* config2;
 extern const char* config3;
@@ -31,5 +32,9 @@ extern unsigned long previous_micros;
 extern int resultIndexes[3];
 extern float resultArray[3][6][9];
 extern bool newResults;
+
+extern String ssid;
+extern String password;
+extern String hostname;
 
 #endif

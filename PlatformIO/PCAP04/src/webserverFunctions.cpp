@@ -100,6 +100,7 @@ void updateFactors(){
     ESPUI.updateText(webserverIDs.zeroingFactor0_3, String(zeroingFactors[0][3], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor0_4, String(zeroingFactors[0][4], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor0_5, String(zeroingFactors[0][5], 9));
+    delay(100);
 
     ESPUI.updateText(webserverIDs.zeroingFactor1_0, String(zeroingFactors[1][0], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor1_1, String(zeroingFactors[1][1], 9));
@@ -107,17 +108,20 @@ void updateFactors(){
     ESPUI.updateText(webserverIDs.zeroingFactor1_3, String(zeroingFactors[1][3], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor1_4, String(zeroingFactors[1][4], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor1_5, String(zeroingFactors[1][5], 9));
-
+    delay(100);
+    
     ESPUI.updateText(webserverIDs.zeroingFactor2_0, String(zeroingFactors[2][0], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor2_1, String(zeroingFactors[2][1], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor2_2, String(zeroingFactors[2][2], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor2_3, String(zeroingFactors[2][3], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor2_4, String(zeroingFactors[2][4], 9));
     ESPUI.updateText(webserverIDs.zeroingFactor2_5, String(zeroingFactors[2][5], 9));
+    delay(100);
 
     ESPUI.updateText(webserverIDs.multiplicationFactor_0, String(multiplicationFactors[0], 9));
     ESPUI.updateText(webserverIDs.multiplicationFactor_1, String(multiplicationFactors[1], 9));
     ESPUI.updateText(webserverIDs.multiplicationFactor_2, String(multiplicationFactors[2], 9));
+    delay(100);
 }
 
 void selectedPCAP(Control* sender, int value){
@@ -180,73 +184,73 @@ void numberCall(Control* sender, int type){
     } 
     
     else if (sender->id == webserverIDs.zeroingFactor0_0){
-        zeroingFactors[0][0] = sender->value.toInt();
+        zeroingFactors[0][0] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor0_1){
-        zeroingFactors[0][1] = sender->value.toInt();
+        zeroingFactors[0][1] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor0_2){
-        zeroingFactors[0][2] = sender->value.toInt();
+        zeroingFactors[0][2] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor0_3){
-        zeroingFactors[0][3] = sender->value.toInt();
+        zeroingFactors[0][3] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor0_4){
-        zeroingFactors[0][4] = sender->value.toInt();
+        zeroingFactors[0][4] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor0_5){
-        zeroingFactors[0][5] = sender->value.toInt();
+        zeroingFactors[0][5] = sender->value.toFloat();
         updatedFactors = true;
     }
 
     else if (sender->id == webserverIDs.zeroingFactor1_0){
-        zeroingFactors[1][0] = sender->value.toInt();
+        zeroingFactors[1][0] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor1_1){
-        zeroingFactors[1][1] = sender->value.toInt();
+        zeroingFactors[1][1] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor1_2){
-        zeroingFactors[1][2] = sender->value.toInt();
+        zeroingFactors[1][2] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor1_3){
-        zeroingFactors[1][3] = sender->value.toInt();
+        zeroingFactors[1][3] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor1_4){
-        zeroingFactors[1][4] = sender->value.toInt();
+        zeroingFactors[1][4] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor1_5){
-        zeroingFactors[1][5] = sender->value.toInt();
+        zeroingFactors[1][5] = sender->value.toFloat();
         updatedFactors = true;
     }
 
     else if (sender->id == webserverIDs.zeroingFactor2_0){
-        zeroingFactors[2][0] = sender->value.toInt();
+        zeroingFactors[2][0] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor2_1){
-        zeroingFactors[2][1] = sender->value.toInt();
+        zeroingFactors[2][1] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor2_2){
-        zeroingFactors[2][2] = sender->value.toInt();
+        zeroingFactors[2][2] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor2_3){
-        zeroingFactors[2][3] = sender->value.toInt();
+        zeroingFactors[2][3] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor2_4){
-        zeroingFactors[2][4] = sender->value.toInt();
+        zeroingFactors[2][4] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.zeroingFactor2_5){
-        zeroingFactors[2][5] = sender->value.toInt();
+        zeroingFactors[2][5] = sender->value.toFloat();
         updatedFactors = true;
     }
 
     else if (sender->id == webserverIDs.multiplicationFactor_0){
-        multiplicationFactors[0] = sender->value.toInt();
+        multiplicationFactors[0] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.multiplicationFactor_1){
-        multiplicationFactors[2] = sender->value.toInt();
+        multiplicationFactors[1] = sender->value.toFloat();
         updatedFactors = true;
     } else if (sender->id == webserverIDs.multiplicationFactor_2){
-        multiplicationFactors[1] = sender->value.toInt();
+        multiplicationFactors[2] = sender->value.toFloat();
         updatedFactors = true;
     }
 
@@ -295,13 +299,21 @@ void buttonCallback(Control* sender, int value){
     if (sender->id == webserverIDs.zeroNow_2){
         resetId = 2;
     }
-    zeroingFactors[resetId][0] = resultArray[resetId][0][0] + zeroingFactors[resetId][0];
-    zeroingFactors[resetId][1] = resultArray[resetId][1][0] + zeroingFactors[resetId][1];
-    zeroingFactors[resetId][2] = resultArray[resetId][2][0] + zeroingFactors[resetId][2];
-    zeroingFactors[resetId][3] = resultArray[resetId][3][0] + zeroingFactors[resetId][3];
-    zeroingFactors[resetId][4] = resultArray[resetId][4][0] + zeroingFactors[resetId][4];
-    zeroingFactors[resetId][5] = resultArray[resetId][5][0] + zeroingFactors[resetId][5];
+
+    if (value == B_DOWN){
+    Serial.print("Current zeroing factor 1: ");
+    Serial.println(zeroingFactors[resetId][0]);
+    zeroingFactors[resetId][0] = (resultArray[resetId][0][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][0];
+    zeroingFactors[resetId][1] = (resultArray[resetId][1][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][1];
+    zeroingFactors[resetId][2] = (resultArray[resetId][2][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][2];
+    zeroingFactors[resetId][3] = (resultArray[resetId][3][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][3];
+    zeroingFactors[resetId][4] = (resultArray[resetId][4][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][4];
+    zeroingFactors[resetId][5] = (resultArray[resetId][5][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][5];
+
+    Serial.print("New zeroing factor 1: ");
+    Serial.println(zeroingFactors[resetId][0]);
     updatedFactors = true;
+    }
 }
 
 

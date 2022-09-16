@@ -94,9 +94,9 @@ void writeConfigtoSD(const char* configname,pcap_config_t * config, int selected
   "PostprocessingFactors: \n"             ;
 
   for (int j = 0; j < 6; j++){
-    dataMessage = dataMessage + String(zeroingFactors[selectedChip][j], 9) + "\n";
+    dataMessage = dataMessage + String(zeroingFactors[selectedChip-1][j], 9) + "\n";
   }
-    dataMessage = dataMessage + String(multiplicationFactors[selectedChip], 9) + "\n";
+    dataMessage = dataMessage + String(multiplicationFactors[selectedChip-1], 9) + "\n";
 
 
   
@@ -141,9 +141,9 @@ void readConfigfromSD(const char* configname, pcap_config_t *config, int selecte
 
   buffer = configfile.readStringUntil('\n');
   for (int j = 0; j < 6; j++){
-    zeroingFactors[selectedChip][j] = configfile.readStringUntil('\n').toInt();
+    zeroingFactors[selectedChip-1][j] = configfile.readStringUntil('\n').toFloat();
   }
-  multiplicationFactors[selectedChip] = configfile.readStringUntil('\n').toInt();
+  multiplicationFactors[selectedChip-1] = configfile.readStringUntil('\n').toFloat();
 
 
   configfile.close();

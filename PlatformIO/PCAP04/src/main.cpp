@@ -12,8 +12,8 @@
 //------------Parameters------------//
 
 //Default wifi connection settings
-String ssid = "LapTom";
-String password = "1234567890";
+String ssid = "GenericWifi-SSID";
+String password = "GenericWifi-PWD";
 String hostname = "espui";
 
 //SD and configuration settings
@@ -179,8 +179,8 @@ void loop() {
     printFactors();
     updateFactors();
     writeConfigtoSD(config1,&Config_PCAP_1,1);
-    writeConfigtoSD(config2,&Config_PCAP_2,1);
-    writeConfigtoSD(config3,&Config_PCAP_3,1);
+    writeConfigtoSD(config2,&Config_PCAP_2,2);
+    writeConfigtoSD(config3,&Config_PCAP_3,3);
 
     updatedFactors = false;
   }

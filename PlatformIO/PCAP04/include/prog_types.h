@@ -91,6 +91,9 @@ struct webserverControlIDs
 
     uint16_t C_fake;
     uint16_t C_avrg;
+
+    //Tab6
+    uint16_t OX_RUN;
 };
 
 #endif

@@ -165,6 +165,8 @@ void SelectionCallback(Control* sender, int value){
         } else if (sender->value.toInt() == 3){
             clockPeriod = 5;
         }
+    } else if (sender->id == webserverIDs.OX_RUN){
+        webserverConfig->OX_RUN = sender->value.toInt();
     }
     configFromUpdate();
 }
@@ -390,7 +392,7 @@ void setupWebserver(){
     //uint16_t tab3 = ESPUI.addControl(ControlType::Tab, "RDC", "RDC");
     //uint16_t tab4 = ESPUI.addControl(ControlType::Tab, "PDM/PWM", "PDM/PWM");
     //uint16_t tab5 = ESPUI.addControl(ControlType::Tab, "DSP/GPIO", "DSP/GPIO");
-    //uint16_t tab6 = ESPUI.addControl(ControlType::Tab, "Misc", "Misc");
+    uint16_t tab6 = ESPUI.addControl(ControlType::Tab, "Misc", "Misc");
     //uint16_t tab7 = ESPUI.addControl(ControlType::Tab, "Expert", "Expert");
     //uint16_t tab8 = ESPUI.addControl(ControlType::Tab, "Config Check", "Config Check");
     //uint16_t tab9 = ESPUI.addControl(ControlType::Tab, "Postprocessing", "Postprocessing");
@@ -526,6 +528,15 @@ void setupWebserver(){
     //Cfake & cavrg
     webserverIDs.C_fake = ESPUI.addControl(ControlType::Number, "C_FAKE:", "0", ControlColor::Alizarin, tab2, &numberCall);
     webserverIDs.C_avrg = ESPUI.addControl(ControlType::Number, "C_AVRG:", "0", ControlColor::Alizarin, tab2, &numberCall);
+
+    // Tab6 - Misc
+    // Ox run
+    webserverIDs.OX_RUN = ESPUI.addControl(ControlType::Select, "OX_RUN:", "", ControlColor::Turquoise, tab6, &SelectionCallback);
+    ESPUI.addControl(ControlType::Option, "Off", "0", ControlColor::Alizarin, webserverIDs.OX_RUN);
+    ESPUI.addControl(ControlType::Option, "Permanent", "1", ControlColor::Alizarin, webserverIDs.OX_RUN);
+    ESPUI.addControl(ControlType::Option, "OX Pulsed, 1*tolf", "6", ControlColor::Alizarin, webserverIDs.OX_RUN);
+    ESPUI.addControl(ControlType::Option, "OX Pulsed, 2*tolf", "3", ControlColor::Alizarin, webserverIDs.OX_RUN);
+    ESPUI.addControl(ControlType::Option, "OX Pulsed, 31*tolf", "2", ControlColor::Alizarin, webserverIDs.OX_RUN);
 
     updateFromConfig();
 }

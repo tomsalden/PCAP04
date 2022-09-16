@@ -47,19 +47,19 @@ void configFromUpdate(){
     if (currentPCAP == 1){
         digitalWrite(pcap1_i2c, HIGH);
         pcap1.update_config(webserverConfig);
-        writeConfigtoSD(config1,webserverConfig);
+        writeConfigtoSD(config1,webserverConfig,1);
         digitalWrite(pcap1_i2c, LOW);
     }
     if (currentPCAP == 2){
         digitalWrite(pcap2_i2c, HIGH);
         pcap2.update_config(webserverConfig);
-        writeConfigtoSD(config2,webserverConfig);
+        writeConfigtoSD(config2,webserverConfig,2);
         digitalWrite(pcap2_i2c, LOW);
     }
     if (currentPCAP == 3){
         digitalWrite(pcap3_i2c, HIGH);
         pcap3.update_config(webserverConfig);
-        writeConfigtoSD(config3,webserverConfig);
+        writeConfigtoSD(config3,webserverConfig,3);
         digitalWrite(pcap3_i2c, LOW);
     }
 }
@@ -91,6 +91,33 @@ void updateWebserverValues(){
 
     previous_micros = current_micros;
   }
+}
+
+void updateFactors(){
+    ESPUI.updateText(webserverIDs.zeroingFactor0_0, String(zeroingFactors[0][0], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor0_1, String(zeroingFactors[0][1], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor0_2, String(zeroingFactors[0][2], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor0_3, String(zeroingFactors[0][3], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor0_4, String(zeroingFactors[0][4], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor0_5, String(zeroingFactors[0][5], 9));
+
+    ESPUI.updateText(webserverIDs.zeroingFactor1_0, String(zeroingFactors[1][0], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor1_1, String(zeroingFactors[1][1], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor1_2, String(zeroingFactors[1][2], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor1_3, String(zeroingFactors[1][3], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor1_4, String(zeroingFactors[1][4], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor1_5, String(zeroingFactors[1][5], 9));
+
+    ESPUI.updateText(webserverIDs.zeroingFactor2_0, String(zeroingFactors[2][0], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor2_1, String(zeroingFactors[2][1], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor2_2, String(zeroingFactors[2][2], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor2_3, String(zeroingFactors[2][3], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor2_4, String(zeroingFactors[2][4], 9));
+    ESPUI.updateText(webserverIDs.zeroingFactor2_5, String(zeroingFactors[2][5], 9));
+
+    ESPUI.updateText(webserverIDs.multiplicationFactor_0, String(multiplicationFactors[0], 9));
+    ESPUI.updateText(webserverIDs.multiplicationFactor_1, String(multiplicationFactors[1], 9));
+    ESPUI.updateText(webserverIDs.multiplicationFactor_2, String(multiplicationFactors[2], 9));
 }
 
 void selectedPCAP(Control* sender, int value){
@@ -150,7 +177,79 @@ void numberCall(Control* sender, int type){
         webserverConfig->C_FAKE = sender->value.toInt();
     } else if (sender->id == webserverIDs.C_avrg){
         webserverConfig->C_AVRG = sender->value.toInt();
+    } 
+    
+    else if (sender->id == webserverIDs.zeroingFactor0_0){
+        zeroingFactors[0][0] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor0_1){
+        zeroingFactors[0][1] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor0_2){
+        zeroingFactors[0][2] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor0_3){
+        zeroingFactors[0][3] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor0_4){
+        zeroingFactors[0][4] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor0_5){
+        zeroingFactors[0][5] = sender->value.toInt();
+        updatedFactors = true;
     }
+
+    else if (sender->id == webserverIDs.zeroingFactor1_0){
+        zeroingFactors[1][0] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor1_1){
+        zeroingFactors[1][1] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor1_2){
+        zeroingFactors[1][2] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor1_3){
+        zeroingFactors[1][3] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor1_4){
+        zeroingFactors[1][4] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor1_5){
+        zeroingFactors[1][5] = sender->value.toInt();
+        updatedFactors = true;
+    }
+
+    else if (sender->id == webserverIDs.zeroingFactor2_0){
+        zeroingFactors[2][0] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor2_1){
+        zeroingFactors[2][1] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor2_2){
+        zeroingFactors[2][2] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor2_3){
+        zeroingFactors[2][3] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor2_4){
+        zeroingFactors[2][4] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.zeroingFactor2_5){
+        zeroingFactors[2][5] = sender->value.toInt();
+        updatedFactors = true;
+    }
+
+    else if (sender->id == webserverIDs.multiplicationFactor_0){
+        multiplicationFactors[0] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.multiplicationFactor_1){
+        multiplicationFactors[2] = sender->value.toInt();
+        updatedFactors = true;
+    } else if (sender->id == webserverIDs.multiplicationFactor_2){
+        multiplicationFactors[1] = sender->value.toInt();
+        updatedFactors = true;
+    }
+
     configFromUpdate();
 
     Serial.print("Number: ");
@@ -184,6 +283,27 @@ void switchCallback(Control* sender, int value){
     }
     configFromUpdate();
 } 
+
+void buttonCallback(Control* sender, int value){
+    int resetId = 0;
+    if (sender->id == webserverIDs.zeroNow_0){
+        resetId = 0;
+    }
+    if (sender->id == webserverIDs.zeroNow_1){
+        resetId = 1;
+    }
+    if (sender->id == webserverIDs.zeroNow_2){
+        resetId = 2;
+    }
+    zeroingFactors[resetId][0] = resultArray[resetId][0][0] + zeroingFactors[resetId][0];
+    zeroingFactors[resetId][1] = resultArray[resetId][1][0] + zeroingFactors[resetId][1];
+    zeroingFactors[resetId][2] = resultArray[resetId][2][0] + zeroingFactors[resetId][2];
+    zeroingFactors[resetId][3] = resultArray[resetId][3][0] + zeroingFactors[resetId][3];
+    zeroingFactors[resetId][4] = resultArray[resetId][4][0] + zeroingFactors[resetId][4];
+    zeroingFactors[resetId][5] = resultArray[resetId][5][0] + zeroingFactors[resetId][5];
+    updatedFactors = true;
+}
+
 
 
 
@@ -261,6 +381,7 @@ void setupWebserver(){
     //uint16_t tab6 = ESPUI.addControl(ControlType::Tab, "Misc", "Misc");
     //uint16_t tab7 = ESPUI.addControl(ControlType::Tab, "Expert", "Expert");
     //uint16_t tab8 = ESPUI.addControl(ControlType::Tab, "Config Check", "Config Check");
+    //uint16_t tab9 = ESPUI.addControl(ControlType::Tab, "Postprocessing", "Postprocessing");
 
     //Outside of the tabs
     webserverIDs.STATUS = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin);
@@ -277,20 +398,53 @@ void setupWebserver(){
     webserverIDs.webResult0_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
     webserverIDs.webResult0_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult0_0);
 
-    webserverIDs.webResult1_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, tab0);
-    webserverIDs.webResult1_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
-    webserverIDs.webResult1_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
-    webserverIDs.webResult1_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
-    webserverIDs.webResult1_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
-    webserverIDs.webResult1_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult1_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
+    webserverIDs.webResult1_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 2","No data",ControlColor::Turquoise, webserverIDs.webResult1_0);
 
-    webserverIDs.webResult2_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, tab0);
-    webserverIDs.webResult2_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
-    webserverIDs.webResult2_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
-    webserverIDs.webResult2_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
-    webserverIDs.webResult2_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
-    webserverIDs.webResult2_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 1","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_0 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, tab0);
+    webserverIDs.webResult2_1 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_2 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_3 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_4 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
+    webserverIDs.webResult2_5 = ESPUI.addControl(ControlType::Label, "Result PCAP 3","No data",ControlColor::Turquoise, webserverIDs.webResult2_0);
 
+    //Postprocessing
+    webserverIDs.zeroingLabel_0 = ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 1", "Zeroing Factor", ControlColor::Turquoise, tab0);
+    webserverIDs.zeroingFactor0_0 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroingFactor0_1 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroingFactor0_2 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroingFactor0_3 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroingFactor0_4 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroingFactor0_5 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+    webserverIDs.zeroNow_0 = ESPUI.addControl(ControlType::Button, "Zero PCAP 1","Zero PCAP 1",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&buttonCallback);
+    ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 1", "Multiplication Factor", ControlColor::Turquoise, webserverIDs.zeroingLabel_0);
+    webserverIDs.multiplicationFactor_0 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 1","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_0,&numberCall);
+
+    webserverIDs.zeroingLabel_1 = ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 2", "Zeroing Factor", ControlColor::Turquoise, tab0);
+    webserverIDs.zeroingFactor1_0 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroingFactor1_1 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroingFactor1_2 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroingFactor1_3 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroingFactor1_4 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroingFactor1_5 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+    webserverIDs.zeroNow_1 = ESPUI.addControl(ControlType::Button, "Zero PCAP 2","Zero PCAP 2",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&buttonCallback);
+    ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 2", "Multiplication Factor", ControlColor::Turquoise, webserverIDs.zeroingLabel_1);
+    webserverIDs.multiplicationFactor_1 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 2","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_1,&numberCall);
+
+    webserverIDs.zeroingLabel_2 = ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 3", "Zeroing Factor", ControlColor::Turquoise, tab0);
+    webserverIDs.zeroingFactor2_0 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroingFactor2_1 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroingFactor2_2 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroingFactor2_3 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroingFactor2_4 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroingFactor2_5 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
+    webserverIDs.zeroNow_2 = ESPUI.addControl(ControlType::Button, "Zero PCAP 3","Zero PCAP 3",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&buttonCallback);
+    ESPUI.addControl(ControlType::Label, "Postprocessing PCAP 3", "Multiplication Factor", ControlColor::Turquoise, webserverIDs.zeroingLabel_2);
+    webserverIDs.multiplicationFactor_2 = ESPUI.addControl(ControlType::Text, "PostProcessing PCAP 3","0",ControlColor::Turquoise, webserverIDs.zeroingLabel_2,&numberCall);
 
     // Tab1 - CDC Frontend
     // Measurement Scheme

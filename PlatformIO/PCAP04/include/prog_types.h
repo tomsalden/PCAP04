@@ -25,6 +25,39 @@ struct webserverControlIDs
     uint16_t webResult2_4;
     uint16_t webResult2_5;
 
+    uint16_t zeroingLabel_0;
+    uint16_t zeroingLabel_1;
+    uint16_t zeroingLabel_2;
+
+    uint16_t zeroingFactor0_0;
+    uint16_t zeroingFactor0_1;
+    uint16_t zeroingFactor0_2;
+    uint16_t zeroingFactor0_3;
+    uint16_t zeroingFactor0_4;
+    uint16_t zeroingFactor0_5;
+    
+    uint16_t zeroingFactor1_0;
+    uint16_t zeroingFactor1_1;
+    uint16_t zeroingFactor1_2;
+    uint16_t zeroingFactor1_3;
+    uint16_t zeroingFactor1_4;
+    uint16_t zeroingFactor1_5;
+    
+    uint16_t zeroingFactor2_0;
+    uint16_t zeroingFactor2_1;
+    uint16_t zeroingFactor2_2;
+    uint16_t zeroingFactor2_3;
+    uint16_t zeroingFactor2_4;
+    uint16_t zeroingFactor2_5;
+
+    uint16_t zeroNow_0;
+    uint16_t zeroNow_1;
+    uint16_t zeroNow_2;
+
+    uint16_t multiplicationFactor_0;
+    uint16_t multiplicationFactor_1;
+    uint16_t multiplicationFactor_2;
+
     uint16_t STATUS;
     uint16_t selectPCAP;
 

@@ -29,6 +29,10 @@ extern const char* config3;
 extern unsigned long current_micros;
 extern unsigned long previous_micros;
 
+extern bool updatedFactors;
+extern float zeroingFactors[3][6];
+extern float multiplicationFactors[3];
+
 extern int resultIndexes[3];
 extern float resultArray[3][6][9];
 extern bool newResults;

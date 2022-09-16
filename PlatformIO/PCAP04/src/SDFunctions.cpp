@@ -62,7 +62,7 @@ void writetoSD(){
   }
 }
 
-void writeConfigtoSD(const char* configname,pcap_config_t * config){
+void writeConfigtoSD(const char* configname,pcap_config_t * config, int selectedChip){
   if (SD_attached == false){//Don't write anything if there is no SD card attached
     return;
   }
@@ -90,12 +90,20 @@ void writeConfigtoSD(const char* configname,pcap_config_t * config){
   String(config->CY_HFCLK_SEL)     + "\n" +
   String(config->CY_DIV4_DIS)      + "\n" + 
   String(config->C_FAKE)           + "\n" +
-  String(config->C_AVRG)           + "\n" ;
+  String(config->C_AVRG)           + "\n" +
+  "PostprocessingFactors: \n"             ;
+
+  for (int j = 0; j < 6; j++){
+    dataMessage = dataMessage + String(zeroingFactors[selectedChip][j], 9) + "\n";
+  }
+    dataMessage = dataMessage + String(multiplicationFactors[selectedChip], 9) + "\n";
+
+
   
   appendFile(SD, configname, dataMessage.c_str());
 }
 
-void readConfigfromSD(const char* configname, pcap_config_t *config){
+void readConfigfromSD(const char* configname, pcap_config_t *config, int selectedChip){
   //https://forum.arduino.cc/t/writing-and-reading-whole-structs-on-sd/205549
   if (SD_attached == false){ //Don't read anything if there is no SD card attached
     return;
@@ -109,7 +117,7 @@ void readConfigfromSD(const char* configname, pcap_config_t *config){
     configfile.close();
     Serial.println("File does not exist, creating file...");
     writeFile(SD,configname,"");
-    writeConfigtoSD(configname,config); //Write the basic config in the file
+    writeConfigtoSD(configname,config, selectedChip); //Write the basic config in the file
     //return;
     configfile = SD.open(configname,FILE_READ);
   }
@@ -130,6 +138,13 @@ void readConfigfromSD(const char* configname, pcap_config_t *config){
   config->CY_DIV4_DIS = configfile.readStringUntil('\n').toInt();
   config->C_FAKE = configfile.readStringUntil('\n').toInt();
   config->C_AVRG = configfile.readStringUntil('\n').toInt();
+
+  buffer = configfile.readStringUntil('\n');
+  for (int j = 0; j < 6; j++){
+    zeroingFactors[selectedChip][j] = configfile.readStringUntil('\n').toInt();
+  }
+  multiplicationFactors[selectedChip] = configfile.readStringUntil('\n').toInt();
+
 
   configfile.close();
 }
@@ -188,6 +203,28 @@ void readGeneralConfig(const char* configname){
   hostname = configfile.readStringUntil('\n');
 
   configfile.close();
+}
+
+void printFactors(){
+  if (SD_attached == true)
+  {
+    // Write to SD
+    String dataMessage = "Zeroing factors: \r\n";
+
+    for (int i = 0; i < 3; i++){  //For all PCAP's
+      for (int j = 0; j < 6; j++){                           //For all results
+        dataMessage = dataMessage + String(zeroingFactors[i][j], 9) + " - ";
+      }
+      dataMessage = dataMessage + "\r\n";
+    }
+    dataMessage = dataMessage + "MultiplicationFactors: \r\n";
+    for (int i = 0; i < 3; i++){
+      dataMessage = dataMessage + String(multiplicationFactors[i], 9) + " - ";
+    }
+    dataMessage = dataMessage + "\r\n";
+
+    appendFile(SD, fileName.c_str(), dataMessage.c_str());    //Write the data to the SD file
+  }
 }
 
 void SD_Initialise(){

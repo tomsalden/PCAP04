@@ -44,6 +44,11 @@ PCAP04IIC pcap3(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,d
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
 
+//Factors to zero out results and account for inaccuracies of reference capacitances
+bool updatedFactors = false;
+float zeroingFactors[3][6] = { 0 };
+float multiplicationFactors[3] = {1,1,1};
+
 //Arrays for the results
 int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
@@ -133,26 +138,28 @@ void setup() {
   if (pcap1_enable == true){
     digitalWrite(pcap1_i2c, HIGH);
     pcap1.cdc_complete_flag = true; 
-    readConfigfromSD(config1,&Config_PCAP_1);
+    readConfigfromSD(config1,&Config_PCAP_1,1);
     pcap1.update_config(&Config_PCAP_1);
     delay(300);
   }
   if (pcap2_enable == true){
     digitalWrite(pcap2_i2c, HIGH);
     pcap2.cdc_complete_flag = true;
-    readConfigfromSD(config2,&Config_PCAP_2);
+    readConfigfromSD(config2,&Config_PCAP_2,2);
     pcap2.update_config(&Config_PCAP_2);
     delay(300);
   }
   if (pcap3_enable == true){
     digitalWrite(pcap3_i2c, HIGH);
     pcap3.cdc_complete_flag = true;
-    readConfigfromSD(config3,&Config_PCAP_3);
+    readConfigfromSD(config3,&Config_PCAP_3,3);
     pcap3.update_config(&Config_PCAP_3);
     delay(300);
   }
   //Update webserver to show correct configuration
   updateFromConfig();
+  printFactors();
+  updateFactors();
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
 }
 
@@ -166,6 +173,16 @@ void loop() {
   }
   if (pcap3.cdc_complete_flag){
     updateResults(&pcap3,2,pcap3_i2c);
+  }
+
+  if (updatedFactors == true){
+    printFactors();
+    updateFactors();
+    writeConfigtoSD(config1,&Config_PCAP_1,1);
+    writeConfigtoSD(config2,&Config_PCAP_2,1);
+    writeConfigtoSD(config3,&Config_PCAP_3,1);
+
+    updatedFactors = false;
   }
 
   //If there are no new results, stop this loop and start over

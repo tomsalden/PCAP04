@@ -164,12 +164,12 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex, int pcap_i2c){
     Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
     return;
   }
-  resultArray[pcapIndex][0][0] = pcap_results->C0_over_CREF;
-  resultArray[pcapIndex][1][0] = pcap_results->C1_over_CREF;
-  resultArray[pcapIndex][2][0] = pcap_results->C2_over_CREF;
-  resultArray[pcapIndex][3][0] = pcap_results->C3_over_CREF;
-  resultArray[pcapIndex][4][0] = pcap_results->C4_over_CREF;
-  resultArray[pcapIndex][5][0] = pcap_results->C5_over_CREF;
+  resultArray[pcapIndex][0][0] = (pcap_results->C0_over_CREF - zeroingFactors[pcapIndex][0]) * multiplicationFactors[pcapIndex];
+  resultArray[pcapIndex][1][0] = (pcap_results->C1_over_CREF - zeroingFactors[pcapIndex][1]) * multiplicationFactors[pcapIndex];
+  resultArray[pcapIndex][2][0] = (pcap_results->C2_over_CREF - zeroingFactors[pcapIndex][2]) * multiplicationFactors[pcapIndex];
+  resultArray[pcapIndex][3][0] = (pcap_results->C3_over_CREF - zeroingFactors[pcapIndex][3]) * multiplicationFactors[pcapIndex];
+  resultArray[pcapIndex][4][0] = (pcap_results->C4_over_CREF - zeroingFactors[pcapIndex][4]) * multiplicationFactors[pcapIndex];
+  resultArray[pcapIndex][5][0] = (pcap_results->C5_over_CREF - zeroingFactors[pcapIndex][5]) * multiplicationFactors[pcapIndex];
 
   //resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
   // if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)

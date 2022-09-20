@@ -161,7 +161,7 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex, int pcap_i2c){
 
   current_micros = micros();
   if (pcap_status->COMB_ERR){
-    Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
+    Serial.println("OUTPUT ERROR IN PCAP04-" + String(pcapIndex+1));
     return;
   }
   resultArray[pcapIndex][0][0] = (pcap_results->C0_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][0]);

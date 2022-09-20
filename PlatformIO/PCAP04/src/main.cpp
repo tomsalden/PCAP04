@@ -53,6 +53,8 @@ float multiplicationFactors[3] = {1,1,1};
 int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
 bool newResults = false;
+bool initialisation = true;
+
 
 void setup() {
   //Startup esp32 and begin serial connection
@@ -161,17 +163,18 @@ void setup() {
   printFactors();
   updateFactors();
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
+  initialisation = false;
 }
 
 void loop() {
   //Check if new results are triggered by the interrupt pin
-  if (pcap1.cdc_complete_flag){
+  if (pcap1.cdc_complete_flag && initialisation == false){
     updateResults(&pcap1,0,pcap1_i2c);
   }
-  if (pcap2.cdc_complete_flag){
+  if (pcap2.cdc_complete_flag && initialisation == false){
     updateResults(&pcap2,1,pcap2_i2c);
   }
-  if (pcap3.cdc_complete_flag){
+  if (pcap3.cdc_complete_flag && initialisation == false){
     updateResults(&pcap3,2,pcap3_i2c);
   }
 
@@ -186,7 +189,7 @@ void loop() {
   }
 
   //If there are no new results, stop this loop and start over
-  if (newResults != true){
+  if (newResults == false){
     return;
   }
 

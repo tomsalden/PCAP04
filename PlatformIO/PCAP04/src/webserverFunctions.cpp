@@ -8,6 +8,8 @@
 #include "prog_types.h"
 #include "prog_defines.h"
 
+#include "PCAP04Functions.h"
+
 webserverControlIDs webserverIDs;
 pcap_config_t* webserverConfig;
 
@@ -37,9 +39,16 @@ void updateFromConfig(){
     ESPUI.updateSelect(webserverIDs.Rchr,(String)(webserverConfig->RCHG_SEL));
     ESPUI.updateSelect(webserverIDs.Cref,(String)(webserverConfig->C_REF_INT));
     ESPUI.updateNumber(webserverIDs.CintSelect,webserverConfig->C_REF_SEL);
+    ESPUI.updateNumber(webserverIDs.t_precharge,webserverConfig->PRECHARGE_TIME);
+    ESPUI.updateNumber(webserverIDs.t_fullcharge,webserverConfig->FULLCHARGE_TIME);
+    ESPUI.updateNumber(webserverIDs.t_discharge,webserverConfig->DISCHARGE_TIME);
+
     ESPUI.updateSelect(webserverIDs.clockcycleselect,(String)(webserverConfig->CY_HFCLK_SEL<<1 | webserverConfig->CY_DIV4_DIS));
     ESPUI.updateNumber(webserverIDs.C_fake,webserverConfig->C_FAKE);
     ESPUI.updateNumber(webserverIDs.C_avrg,webserverConfig->C_AVRG);
+
+
+    ESPUI.updateNumber(webserverIDs.OX_RUN,webserverConfig->OX_RUN);
 
 }
 
@@ -173,10 +182,13 @@ void SelectionCallback(Control* sender, int value){
 void numberCall(Control* sender, int type){
     if (sender->id == webserverIDs.t_precharge){
         ESPUI.updateLabel(webserverIDs.t_pre_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
+        webserverConfig->PRECHARGE_TIME = sender->value.toInt();
     } else if (sender->id == webserverIDs.t_fullcharge){
         ESPUI.updateLabel(webserverIDs.t_full_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
+        webserverConfig->FULLCHARGE_TIME = sender->value.toInt();
     } else if (sender->id == webserverIDs.t_discharge){
         ESPUI.updateLabel(webserverIDs.t_dis_label,(String)(((sender->value.toInt()+1) * clockPeriod)/10) + "us");
+        webserverConfig->DISCHARGE_TIME = sender->value.toInt();
     } else if (sender->id == webserverIDs.CintSelect){
         webserverConfig->C_REF_SEL = sender->value.toInt();
     } else if (sender->id == webserverIDs.C_fake){
@@ -291,7 +303,7 @@ void switchCallback(Control* sender, int value){
 } 
 
 void buttonCallback(Control* sender, int value){
-    int resetId = 0;
+    int resetId = -1;
     if (sender->id == webserverIDs.zeroNow_0){
         resetId = 0;
     }
@@ -302,20 +314,35 @@ void buttonCallback(Control* sender, int value){
         resetId = 2;
     }
 
-    if (value == B_DOWN){
+    if (value == B_DOWN && resetId > -1){
     Serial.print("Current zeroing factor 1: ");
     Serial.println(zeroingFactors[resetId][0]);
-    zeroingFactors[resetId][0] = (resultArray[resetId][0][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][0];
-    zeroingFactors[resetId][1] = (resultArray[resetId][1][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][1];
-    zeroingFactors[resetId][2] = (resultArray[resetId][2][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][2];
-    zeroingFactors[resetId][3] = (resultArray[resetId][3][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][3];
-    zeroingFactors[resetId][4] = (resultArray[resetId][4][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][4];
-    zeroingFactors[resetId][5] = (resultArray[resetId][5][0]/multiplicationFactors[resetId]) + zeroingFactors[resetId][5];
+    zeroingFactors[resetId][0] = resultArray[resetId][0][0] + zeroingFactors[resetId][0];
+    zeroingFactors[resetId][1] = resultArray[resetId][1][0] + zeroingFactors[resetId][1];
+    zeroingFactors[resetId][2] = resultArray[resetId][2][0] + zeroingFactors[resetId][2];
+    zeroingFactors[resetId][3] = resultArray[resetId][3][0] + zeroingFactors[resetId][3];
+    zeroingFactors[resetId][4] = resultArray[resetId][4][0] + zeroingFactors[resetId][4];
+    zeroingFactors[resetId][5] = resultArray[resetId][5][0] + zeroingFactors[resetId][5];
 
     Serial.print("New zeroing factor 1: ");
     Serial.println(zeroingFactors[resetId][0]);
     updatedFactors = true;
     }
+    if (sender->id == webserverIDs.PowerReset && value == B_DOWN){
+        Serial.println("Resetting PCAP " + String(currentPCAP));
+        initialisation = true;
+        if (currentPCAP == 1){
+            initialisePCAP(&pcap1, &Config_PCAP_1, pcap1_i2c, pcap1_addr);
+        }
+        if (currentPCAP == 2){
+            initialisePCAP(&pcap2, &Config_PCAP_2, pcap2_i2c, pcap2_addr);
+        }
+        if (currentPCAP == 3){
+            initialisePCAP(&pcap3, &Config_PCAP_3, pcap3_i2c, pcap3_addr);
+        }
+        initialisation = false;
+    }
+
 }
 
 
@@ -537,6 +564,8 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 1*tolf", "6", ControlColor::Alizarin, webserverIDs.OX_RUN);
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 2*tolf", "3", ControlColor::Alizarin, webserverIDs.OX_RUN);
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 31*tolf", "2", ControlColor::Alizarin, webserverIDs.OX_RUN);
+
+    webserverIDs.PowerReset = ESPUI.addControl(ControlType::Button, "Power-on Reset","Power-on Reset",ControlColor::Turquoise, tab6,&buttonCallback);
 
     updateFromConfig();
 }

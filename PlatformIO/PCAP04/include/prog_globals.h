@@ -36,6 +36,7 @@ extern float multiplicationFactors[3];
 extern int resultIndexes[3];
 extern float resultArray[3][6][9];
 extern bool newResults;
+extern bool initialisation;
 
 extern String ssid;
 extern String password;

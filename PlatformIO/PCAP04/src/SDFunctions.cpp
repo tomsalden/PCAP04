@@ -87,10 +87,14 @@ void writeConfigtoSD(const char* configname,pcap_config_t * config, int selected
   String(config->RCHG_SEL)         + "\n" +
   String(config->C_REF_INT)        + "\n" +
   String(config->C_REF_SEL)        + "\n" +
+  String(config->PRECHARGE_TIME)   + "\n" +
+  String(config->FULLCHARGE_TIME)  + "\n" +
+  String(config->DISCHARGE_TIME)   + "\n" +
   String(config->CY_HFCLK_SEL)     + "\n" +
   String(config->CY_DIV4_DIS)      + "\n" + 
   String(config->C_FAKE)           + "\n" +
   String(config->C_AVRG)           + "\n" +
+  String(config->OX_RUN)           + "\n" +
   "PostprocessingFactors: \n"             ;
 
   for (int j = 0; j < 6; j++){
@@ -134,10 +138,14 @@ void readConfigfromSD(const char* configname, pcap_config_t *config, int selecte
   config->RCHG_SEL = configfile.readStringUntil('\n').toInt();
   config->C_REF_INT = configfile.readStringUntil('\n').toInt();
   config->C_REF_SEL = configfile.readStringUntil('\n').toInt();
+  config->PRECHARGE_TIME = configfile.readStringUntil('\n').toInt();
+  config->FULLCHARGE_TIME = configfile.readStringUntil('\n').toInt();
+  config->DISCHARGE_TIME = configfile.readStringUntil('\n').toInt();
   config->CY_HFCLK_SEL = configfile.readStringUntil('\n').toInt();
   config->CY_DIV4_DIS = configfile.readStringUntil('\n').toInt();
   config->C_FAKE = configfile.readStringUntil('\n').toInt();
   config->C_AVRG = configfile.readStringUntil('\n').toInt();
+  config->OX_RUN = configfile.readStringUntil('\n').toInt();
 
   buffer = configfile.readStringUntil('\n');
   for (int j = 0; j < 6; j++){

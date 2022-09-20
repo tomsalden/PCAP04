@@ -94,6 +94,7 @@ struct webserverControlIDs
 
     //Tab6
     uint16_t OX_RUN;
+    uint16_t PowerReset;
 };
 
 #endif

@@ -15,7 +15,7 @@ pcap_config_t* webserverConfig;
 
 int currentPCAP = 1;
 float clockPeriod = 20;
-unsigned long webTimeout = 5000000;
+unsigned long webTimeout = 5000;
 
 void updateFromConfig(){
     webserverConfig = &Config_PCAP_1;

@@ -38,6 +38,8 @@ extern float resultArray[3][6][9];
 extern bool newResults;
 extern bool initialisation;
 
+extern float currentTemperature;
+
 extern String ssid;
 extern String password;
 extern String hostname;

@@ -54,7 +54,22 @@ int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
 bool newResults = false;
 bool initialisation = true;
+float currentTemperature = 0;
 
+float readTemperature(){
+  //MCP9701 temperature sensor
+  //Conversion from voltage to temperature: Vout = Tc * Ta + V0c
+  //Tc = Temperature coefficient, Ta = ambient temperature, V0c = sensor output at 0 celcius
+  //so: Ta = (Vout-V0c)/Tc
+
+  //remap ADC to a voltage output in mV 
+  //Taking into account that the ADC works best in the range of 0.1 to 3.2V (https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/)
+  float sensorInput = map(analogRead(tempSensor),0,4095,100,3200); 
+  float ambientTemperature = (sensorInput-400)/19.5;
+
+  currentTemperature = ambientTemperature;
+  return ambientTemperature;
+}
 
 void setup() {
   //Startup esp32 and begin serial connection
@@ -69,6 +84,7 @@ void setup() {
   pinMode(pcap1_int, INPUT);
   pinMode(pcap2_int, INPUT);
   pinMode(pcap3_int, INPUT);
+  pinMode(tempSensor, INPUT);
 
   //Make sure all PCAP chips are disabled
   pinMode(pcap1_i2c, OUTPUT);
@@ -198,6 +214,8 @@ void loop() {
   printResults();
   writetoSD();
   updateWebserverValues();
+  Serial.print("Current temperature: ");
+  Serial.println(readTemperature());
   digitalWrite(ledB, LOW);
   newResults = false;
 }

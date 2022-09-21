@@ -15,11 +15,12 @@
 #define pcap2_addr 0x2a     //I2C address for 2nd PCAP
 #define pcap3_addr 0x2b     //I2C address for 3rd PCAP
 
-//Definitions for indicator Leds
+//Definitions for indicator Leds and other interfaces
 #define powerLed 27
 #define ledR 26
 #define ledG 33
 #define ledB 32
+#define tempSensor 34
 
 //Definitions for SD-Card
 #define SD_CS 5

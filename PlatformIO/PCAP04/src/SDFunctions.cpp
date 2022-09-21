@@ -95,6 +95,7 @@ void writeConfigtoSD(const char* configname,pcap_config_t * config, int selected
   String(config->CY_DIV4_DIS)      + "\n" + 
   String(config->C_FAKE)           + "\n" +
   String(config->C_AVRG)           + "\n" +
+  String(config->C_G_EN)           + "\n" +
   String(config->OX_RUN)           + "\n" +
   "PostprocessingFactors: \n"             ;
 
@@ -146,6 +147,7 @@ void readConfigfromSD(const char* configname, pcap_config_t *config, int selecte
   config->CY_DIV4_DIS = configfile.readStringUntil('\n').toInt();
   config->C_FAKE = configfile.readStringUntil('\n').toInt();
   config->C_AVRG = configfile.readStringUntil('\n').toInt();
+  config->C_G_EN = configfile.readStringUntil('\n').toInt();
   config->OX_RUN = configfile.readStringUntil('\n').toInt();
 
   buffer = configfile.readStringUntil('\n');

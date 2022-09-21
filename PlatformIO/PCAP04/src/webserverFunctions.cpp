@@ -49,6 +49,12 @@ void updateFromConfig(){
 
 
     ESPUI.updateNumber(webserverIDs.OX_RUN,webserverConfig->OX_RUN);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT0,(webserverConfig->C_G_EN >> 0) & 1);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT1,(webserverConfig->C_G_EN >> 1) & 1);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT2,(webserverConfig->C_G_EN >> 2) & 1);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT3,(webserverConfig->C_G_EN >> 3) & 1);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT4,(webserverConfig->C_G_EN >> 4) & 1);
+    ESPUI.updateSwitcher(webserverIDs.GUARD_SELECT5,(webserverConfig->C_G_EN >> 5) & 1);
 
 }
 
@@ -275,6 +281,7 @@ void numberCall(Control* sender, int type){
 }       
 void switchCallback(Control* sender, int value){
     bool portChange = false;
+    bool guardChange = false;
     int switchId = 0;
     if (sender->id == webserverIDs.PORT_SELECT0){
         switchId = 0;
@@ -299,6 +306,31 @@ void switchCallback(Control* sender, int value){
     if (portChange == true){
         webserverConfig->C_PORT_EN = ((webserverConfig->C_PORT_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
     }
+
+    if (sender->id == webserverIDs.GUARD_SELECT0){
+        switchId = 0;
+        guardChange = true;
+    } else if (sender->id == webserverIDs.GUARD_SELECT1){
+        switchId = 1;
+        guardChange = true;
+    } else if (sender->id == webserverIDs.GUARD_SELECT2){
+        switchId = 2;
+        guardChange = true;
+    } else if (sender->id == webserverIDs.GUARD_SELECT3){
+        switchId = 3;
+        guardChange = true;
+    } else if (sender->id == webserverIDs.GUARD_SELECT4){
+        switchId = 4;
+        guardChange = true;
+    } else if (sender->id == webserverIDs.GUARD_SELECT5){
+        switchId = 5;
+        guardChange = true;
+    }
+
+    if (guardChange == true){
+        webserverConfig->C_G_EN = ((webserverConfig->C_G_EN & (~(1<<switchId))) | (sender->value.toInt() << switchId));
+    }
+
     configFromUpdate();
 } 
 
@@ -564,6 +596,14 @@ void setupWebserver(){
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 1*tolf", "6", ControlColor::Alizarin, webserverIDs.OX_RUN);
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 2*tolf", "3", ControlColor::Alizarin, webserverIDs.OX_RUN);
     ESPUI.addControl(ControlType::Option, "OX Pulsed, 31*tolf", "2", ControlColor::Alizarin, webserverIDs.OX_RUN);
+
+    //Port Select
+    webserverIDs.GUARD_SELECT0 = ESPUI.addControl(ControlType::Switcher, "Cap. Port Select", "0",ControlColor::Turquoise,tab6, &switchCallback);
+    webserverIDs.GUARD_SELECT1 = ESPUI.addControl(ControlType::Switcher, "", "1",ControlColor::None,webserverIDs.GUARD_SELECT0, &switchCallback); 
+    webserverIDs.GUARD_SELECT2 = ESPUI.addControl(ControlType::Switcher, "", "2",ControlColor::None,webserverIDs.GUARD_SELECT0, &switchCallback); 
+    webserverIDs.GUARD_SELECT3 = ESPUI.addControl(ControlType::Switcher, "", "3",ControlColor::None,webserverIDs.GUARD_SELECT0, &switchCallback);
+    webserverIDs.GUARD_SELECT4 = ESPUI.addControl(ControlType::Switcher, "", "4",ControlColor::None,webserverIDs.GUARD_SELECT0, &switchCallback); 
+    webserverIDs.GUARD_SELECT5 = ESPUI.addControl(ControlType::Switcher, "", "5",ControlColor::None,webserverIDs.GUARD_SELECT0, &switchCallback);
 
     webserverIDs.PowerReset = ESPUI.addControl(ControlType::Button, "Power-on Reset","Power-on Reset",ControlColor::Turquoise, tab6,&buttonCallback);
 

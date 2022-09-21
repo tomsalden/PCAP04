@@ -94,6 +94,14 @@ struct webserverControlIDs
 
     //Tab6
     uint16_t OX_RUN;
+
+    uint16_t GUARD_SELECT0;
+    uint16_t GUARD_SELECT1;
+    uint16_t GUARD_SELECT2;
+    uint16_t GUARD_SELECT3;
+    uint16_t GUARD_SELECT4;
+    uint16_t GUARD_SELECT5;
+
     uint16_t PowerReset;
 };
 

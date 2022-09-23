@@ -18,8 +18,9 @@
 //Definitions for indicator Leds and other interfaces
 #define powerLed 27
 #define ledR 26
-#define ledG 33
+#define ledG 35
 #define ledB 32
+#define ws2812Led 25
 #define tempSensor 34
 
 //Definitions for SD-Card

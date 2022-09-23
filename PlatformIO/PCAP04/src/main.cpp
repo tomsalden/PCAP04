@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include "pcap04IIC.h"
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+#include <avr/power.h> // Required for 16 MHz Adafruit Trinket
+#endif
 
 #include "prog_types.h"
 #include "prog_globals.h"
@@ -56,7 +60,9 @@ int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
 bool newResults = false;
 bool initialisation = true;
+
 float currentTemperature = 0;
+Adafruit_NeoPixel indicatorLed(1,ws2812Led, NEO_GRB + NEO_KHZ800);
 
 float readTemperature(){
   //MCP9701 temperature sensor
@@ -73,20 +79,26 @@ float readTemperature(){
   return ambientTemperature;
 }
 
+void updateWS2812(int brightness, int R, int G, int B){
+  indicatorLed.setBrightness(brightness);
+  indicatorLed.setPixelColor(0,indicatorLed.Color(R,G,B));
+  indicatorLed.show();
+}
+
 void setup() {
   //Startup esp32 and begin serial connection
   Serial.begin(115200);
   Serial.println("ESP32 has started, initialising connection...");
 
   //Setup pins for indicator lights and update pins
-  pinMode(powerLed,OUTPUT);
-  pinMode(ledR, OUTPUT);
-  pinMode(ledG, OUTPUT);
-  pinMode(ledB, OUTPUT);
+  pinMode(ws2812Led, OUTPUT);
   pinMode(pcap1_int, INPUT);
   pinMode(pcap2_int, INPUT);
   pinMode(pcap3_int, INPUT);
   pinMode(tempSensor, INPUT);
+
+  indicatorLed.begin();
+  updateWS2812(50,0,255,0);
 
   //Make sure all PCAP chips are disabled
   pinMode(pcap1_i2c, OUTPUT);
@@ -102,7 +114,6 @@ void setup() {
   delay(100);
   SD_Initialise();
 
-  digitalWrite(powerLed,HIGH);
   setupConnection(ssid, password, hostname);
   setupWebserver();
   time_t timeSinceEpoch = 1666051200;
@@ -113,6 +124,7 @@ void setup() {
   ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
   ESPUI.begin("ESPUI Control");
 
+  updateWS2812(100,255,255,0);
   //Initialise the PCAP chips (only the ones that are enabled)
   if (pcap1_enable == true){
     Serial.println("Initializing 1st PCAP");
@@ -122,6 +134,7 @@ void setup() {
     ESPUI.updateLabel(webserverIDs.STATUS,"1st PCAP04 has been initialised");
     delay(300);
   }
+  updateWS2812(100,255,255,85);
 
   digitalWrite(pcap1_i2c, LOW);
   digitalWrite(pcap2_i2c, LOW);
@@ -135,6 +148,7 @@ void setup() {
     ESPUI.updateLabel(webserverIDs.STATUS,"2nd PCAP04 has been initialised");
     delay(300);
   }
+  updateWS2812(100,255,255,170);
 
   digitalWrite(pcap1_i2c, LOW);
   digitalWrite(pcap2_i2c, LOW);
@@ -149,12 +163,16 @@ void setup() {
     delay(300);
   }
 
+  updateWS2812(100,255,255,255);
+
 
   //Show that the chips are initialised
   ESPUI.updateLabel(webserverIDs.STATUS,"Initialized - Loading correct config");
   digitalWrite(ledB, LOW);
   digitalWrite(ledG, HIGH);
   delay(1000);
+
+  updateWS2812(100,255,0,255);
 
   //Start the first readout. Then the chip continues
   //Read and apply the configuration from the SD card
@@ -165,6 +183,7 @@ void setup() {
     pcap1.update_config(&Config_PCAP_1);
     delay(300);
   }
+  updateWS2812(100,255,85,255);
   if (pcap2_enable == true){
     digitalWrite(pcap2_i2c, HIGH);
     pcap2.cdc_complete_flag = true;
@@ -172,6 +191,7 @@ void setup() {
     pcap2.update_config(&Config_PCAP_2);
     delay(300);
   }
+  updateWS2812(100,255,170,255);
   if (pcap3_enable == true){
     digitalWrite(pcap3_i2c, HIGH);
     pcap3.cdc_complete_flag = true;
@@ -179,16 +199,19 @@ void setup() {
     pcap3.update_config(&Config_PCAP_3);
     delay(300);
   }
+  updateWS2812(100,255,255,255);
   //Update webserver to show correct configuration
   updateFromConfig();
   printFactors();
   updateFactors();
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
+  updateWS2812(50,0,0,255);
   initialisation = false;
 }
 
 void loop() {
   //Check if new results are triggered by the interrupt pin
+  updateWS2812(20,0,255,0);
   if (pcap1.cdc_complete_flag && initialisation == false){
     updateResults(&pcap1,0,pcap1_i2c);
   }
@@ -200,6 +223,7 @@ void loop() {
   }
 
   if (updatedFactors == true){
+    updateWS2812(50,255,255,0);
     printFactors();
     updateFactors();
     writeConfigtoSD(config1,&Config_PCAP_1,1);
@@ -213,6 +237,7 @@ void loop() {
   if (newResults == true && initialisation == false){
     //If there are new results, then print them and write thems to SD
     //Also, update the time, since the updated time will be needed
+    updateWS2812(20,0,255,255);
     digitalWrite(ledB, HIGH);
     tm timeinfo;
     getLocalTime(&timeinfo);

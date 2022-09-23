@@ -426,6 +426,7 @@ void setupConnection(String ssid, String password, String hostname)
 
   WiFi.setHostname(hostname.c_str());
   WiFi.setSleep(false);
+  updateWS2812(100,0,255,255);
   // try to connect to existing network
   WiFi.begin(ssid.c_str(), password.c_str());
   Serial.print("\n\nTry to connect to existing network");
@@ -461,7 +462,7 @@ void setupConnection(String ssid, String password, String hostname)
       char ap_ssid[25];
       snprintf(ap_ssid, 26, "ESPUI-%08X", chipid);
       WiFi.softAP(ap_ssid);
-
+      updateWS2812(100,0,0,255);
       timeout = 5;
 
       do

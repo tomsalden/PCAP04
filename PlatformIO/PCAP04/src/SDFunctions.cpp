@@ -8,13 +8,13 @@ String fileName = "";
 uint fileNumber = 0;
 
 void SD_failure_indicator(){
-  digitalWrite(ledR,HIGH);
+  updateWS2812(100,255,0,0);
   delay(1000);
-  digitalWrite(ledR,LOW);
+  updateWS2812(100,0,0,0);
   delay(1000);
-  digitalWrite(ledR,HIGH);
+  updateWS2812(100,255,0,0);
   delay(1000);
-  digitalWrite(ledR,LOW);
+  updateWS2812(50,0,0,0);
   return;
 }
 
@@ -265,6 +265,7 @@ void SD_Initialise(){
   }
   SD_attached = true;
   Serial.println("SD-Card attachment successfull");
+  updateWS2812(100,0,0,255);
 
   fileName = "/data" + String(fileNumber) + ".txt";
   File file = SD.open(fileName);
@@ -284,4 +285,5 @@ void SD_Initialise(){
 
   //Read the general configuration
   readGeneralConfig(generalConfig);
+  updateWS2812(50,255,0,0);
 }

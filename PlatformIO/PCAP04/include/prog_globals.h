@@ -28,6 +28,8 @@ extern const char* config3;
 
 extern unsigned long current_micros;
 extern unsigned long previous_micros;
+extern unsigned long incremented_millis;
+extern unsigned long current_epoch;
 
 extern bool updatedFactors;
 extern float zeroingFactors[3][6];

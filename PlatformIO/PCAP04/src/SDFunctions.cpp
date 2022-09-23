@@ -47,20 +47,25 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
 }
 
 void writetoSD(){
-  if (SD_attached == true)
-  {
-    // Write to SD
-    String dataMessage = String(current_micros) + ";";            //Write the time
-    dataMessage = dataMessage + String(currentTemperature) + ";"; //Write the temperature
-
-    for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){  //For all PCAP's
-      for (int j = 0; j < 6; j++){                           //For all results
-        dataMessage = dataMessage + String(resultArray[i][j][resultIndexes[i]], 9) + ";";
-      }
-    }
-    dataMessage = dataMessage + "\r\n";                       //Add a newline after the data
-    appendFile(SD, fileName.c_str(), dataMessage.c_str());    //Write the data to the SD file
+  if (SD_attached == false){//Don't write anything if there is no SD card attached
+    return;
   }
+
+  String milliseconds = String(current_micros%1000);                          //Setup the milliseconds, make sure it has 3 digits
+  while (milliseconds.length() < 3){
+    milliseconds = "0" + milliseconds;
+  }
+
+  String dataMessage = String(current_epoch) + milliseconds + ";";            //Write the time in epoch with milliseconds
+  dataMessage = dataMessage + String(currentTemperature) + ";";               //Write the temperature
+
+  for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){                //Print the results of all PCAP's
+    for (int j = 0; j < 6; j++){
+      dataMessage = dataMessage + String(resultArray[i][j][resultIndexes[i]], 9) + ";";
+    }
+  }
+  dataMessage = dataMessage + "\r\n";                                         //Add a newline after the data
+  appendFile(SD, fileName.c_str(), dataMessage.c_str());                      //Write the data to the SD file
 }
 
 void writeConfigtoSD(const char* configname,pcap_config_t * config, int selectedChip){
@@ -270,7 +275,7 @@ void SD_Initialise(){
     fileNumber = fileNumber + 1;
     fileName = "/data" + String(fileNumber) + ".txt";
 
-    Serial.println((String)"Trying " + fileName);
+    //Serial.println((String)"Trying " + fileName);
     file = SD.open(fileName);
   }
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");

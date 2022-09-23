@@ -59,6 +59,7 @@ void updateFromConfig(){
 }
 
 void configFromUpdate(){
+    initialisation = true;
     if (currentPCAP == 1){
         digitalWrite(pcap1_i2c, HIGH);
         pcap1.update_config(webserverConfig);
@@ -77,6 +78,7 @@ void configFromUpdate(){
         writeConfigtoSD(config3,webserverConfig,3);
         digitalWrite(pcap3_i2c, LOW);
     }
+    initialisation = false;
 }
 
 void updateWebserverValues(){
@@ -103,6 +105,13 @@ void updateWebserverValues(){
     ESPUI.updateLabel(webserverIDs.webResult2_3, String(resultArray[2][3][resultIndexes[2]], 9));
     ESPUI.updateLabel(webserverIDs.webResult2_4, String(resultArray[2][4][resultIndexes[2]], 9));
     ESPUI.updateLabel(webserverIDs.webResult2_5, String(resultArray[2][5][resultIndexes[2]], 9));
+
+    tm currentTime;
+    getLocalTime(&currentTime);
+    String timestring = String(currentTime.tm_year+1900) + "-" + String(currentTime.tm_mon+1) + "-" + String(currentTime.tm_mday) + ", " + String(currentTime.tm_hour) + ":" + String(currentTime.tm_min) + ":" + String(currentTime.tm_sec);
+    ESPUI.updateLabel(webserverIDs.timeField, timestring);
+
+    ESPUI.updateLabel(webserverIDs.temperature, "Current temperature: " + String(currentTemperature) + " degrees Celcius");
 
     previous_micros = current_micros;
   }
@@ -335,6 +344,9 @@ void switchCallback(Control* sender, int value){
 } 
 
 void buttonCallback(Control* sender, int value){
+    if (value == B_DOWN && sender->id == webserverIDs.timeButton){
+        ESPUI.updateTime(webserverIDs.timeId);
+    }
     int resetId = -1;
     if (sender->id == webserverIDs.zeroNow_0){
         resetId = 0;
@@ -377,6 +389,32 @@ void buttonCallback(Control* sender, int value){
 
 }
 
+void timeCallback(Control *sender, int type) {
+  if(type == TM_VALUE) { 
+    Serial.println(sender->value);
+    ESPUI.updateLabel(webserverIDs.timeField, sender->value);\
+    struct tm t = {0};
+    String timeConversionBuffer = sender->value.substring(0,4);
+    t.tm_year = sender->value.substring(0,4).toInt() - 1900;
+    t.tm_mon = sender->value.substring(5,7).toInt() - 1;
+    t.tm_mday = sender->value.substring(8,10).toInt();
+    t.tm_hour = sender->value.substring(11,13).toInt();
+    t.tm_min = sender->value.substring(14,16).toInt();
+    t.tm_sec = sender->value.substring(17,19).toInt();
+
+    time_t timeSinceEpoch = mktime(&t);
+    struct timeval now = { .tv_sec = timeSinceEpoch};
+    settimeofday(&now, NULL);
+
+    current_epoch = timeSinceEpoch;
+    current_micros = 0;
+    previous_micros = 0;
+    incremented_millis = 0;
+    updatedFactors = true;
+    
+    Serial.println(current_epoch);
+  }
+}
 
 
 
@@ -387,6 +425,7 @@ void setupConnection(String ssid, String password, String hostname)
     const byte DNS_PORT = 53;
 
   WiFi.setHostname(hostname.c_str());
+  WiFi.setSleep(false);
   // try to connect to existing network
   WiFi.begin(ssid.c_str(), password.c_str());
   Serial.print("\n\nTry to connect to existing network");
@@ -458,6 +497,10 @@ void setupWebserver(){
 
     //Outside of the tabs
     webserverIDs.STATUS = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin);
+    webserverIDs.temperature = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin, webserverIDs.STATUS);
+    webserverIDs.timeField = ESPUI.addControl(ControlType::Label, "Current time", "Not set", ControlColor::Alizarin);
+    webserverIDs.timeButton = ESPUI.addControl(ControlType::Button, "Set current time", "Set current time", ControlColor::Alizarin, webserverIDs.timeField, &buttonCallback);
+    webserverIDs.timeId = ESPUI.addControl(Time, "", "", None, 0, timeCallback);
     webserverIDs.selectPCAP = ESPUI.addControl(ControlType::Select, "Select PCAP number to edit config:", "", ControlColor::Turquoise, Control::noParent, &selectedPCAP);
     ESPUI.addControl(ControlType::Option, "PCAP 1", "1", ControlColor::Alizarin, webserverIDs.selectPCAP);
     ESPUI.addControl(ControlType::Option, "PCAP 2", "2", ControlColor::Alizarin, webserverIDs.selectPCAP);

@@ -43,6 +43,8 @@ PCAP04IIC pcap3(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,d
 //Variables to print the time on SD and keep a correct timeout for the webserver
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
+unsigned long current_epoch = 0;
+unsigned long incremented_millis = 0;
 
 //Factors to zero out results and account for inaccuracies of reference capacitances
 bool updatedFactors = false;
@@ -103,6 +105,9 @@ void setup() {
   digitalWrite(powerLed,HIGH);
   setupConnection(ssid, password, hostname);
   setupWebserver();
+  time_t timeSinceEpoch = 1666051200;
+  struct timeval now = { .tv_sec = timeSinceEpoch};
+  settimeofday(&now, NULL);
 
   //Setup the webserver and show that the device is initialising
   ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
@@ -205,17 +210,18 @@ void loop() {
   }
 
   //If there are no new results, stop this loop and start over
-  if (newResults == false){
-    return;
+  if (newResults == true && initialisation == false){
+    //If there are new results, then print them and write thems to SD
+    //Also, update the time, since the updated time will be needed
+    digitalWrite(ledB, HIGH);
+    tm timeinfo;
+    getLocalTime(&timeinfo);
+    current_epoch = mktime(&timeinfo);
+    printResults();
+    writetoSD();
+    updateWebserverValues();
+    readTemperature();
+    digitalWrite(ledB, LOW);
+    newResults = false;
   }
-
-  //If there are new results, then print them and write thems to SD
-  digitalWrite(ledB, HIGH);
-  printResults();
-  writetoSD();
-  updateWebserverValues();
-  Serial.print("Current temperature: ");
-  Serial.println(readTemperature());
-  digitalWrite(ledB, LOW);
-  newResults = false;
 }

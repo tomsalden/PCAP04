@@ -159,17 +159,24 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex, int pcap_i2c){
   // Serial.print("PCAP "+ (String)pcapIndex + ": ");
   // Serial.println(pcap_results->C1_over_CREF);
 
-  current_micros = micros();
+  current_micros = millis();
   if (pcap_status->COMB_ERR){
-    Serial.println("OUTPUT ERROR IN PCAP04-" + (String)pcapIndex);
+    Serial.println("OUTPUT ERROR IN PCAP04-" + String(pcapIndex+1));
     return;
   }
-  resultArray[pcapIndex][0][0] = pcap_results->C0_over_CREF;
-  resultArray[pcapIndex][1][0] = pcap_results->C1_over_CREF;
-  resultArray[pcapIndex][2][0] = pcap_results->C2_over_CREF;
-  resultArray[pcapIndex][3][0] = pcap_results->C3_over_CREF;
-  resultArray[pcapIndex][4][0] = pcap_results->C4_over_CREF;
-  resultArray[pcapIndex][5][0] = pcap_results->C5_over_CREF;
+  resultArray[pcapIndex][0][0] = (pcap_results->C0_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][0]);
+  resultArray[pcapIndex][1][0] = (pcap_results->C1_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][1]);
+  resultArray[pcapIndex][2][0] = (pcap_results->C2_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][2]);
+  resultArray[pcapIndex][3][0] = (pcap_results->C3_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][3]);
+  resultArray[pcapIndex][4][0] = (pcap_results->C4_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][4]);
+  resultArray[pcapIndex][5][0] = (pcap_results->C5_over_CREF * multiplicationFactors[pcapIndex] - zeroingFactors[pcapIndex][5]);
+  // resultArray[pcapIndex][0][0] = &pcap_results->C0_over_CREF;
+  // resultArray[pcapIndex][0][0] = &pcap_results->C0_over_CREF;
+  // resultArray[pcapIndex][1][0] = &pcap_results->C1_over_CREF;
+  // resultArray[pcapIndex][2][0] = &pcap_results->C2_over_CREF;
+  // resultArray[pcapIndex][3][0] = &pcap_results->C3_over_CREF;
+  // resultArray[pcapIndex][4][0] = &pcap_results->C4_over_CREF;
+  // resultArray[pcapIndex][5][0] = &pcap_results->C5_over_CREF;
 
   //resultIndexes[pcapIndex] = resultIndexes[pcapIndex] + 1;
   // if (resultIndexes[pcapIndex] > sizeof(resultArray[pcapIndex][0][resultIndexes[pcapIndex]])/sizeof(float) - 1)
@@ -180,7 +187,7 @@ void updateResults(PCAP04IIC * pcap, int pcapIndex, int pcap_i2c){
   newResults = true;
   digitalWrite(ledR, LOW);
   digitalWrite(pcap_i2c, LOW);
-  delay(300);
+
 }
 
 

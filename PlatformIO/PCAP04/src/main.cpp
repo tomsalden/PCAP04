@@ -12,12 +12,13 @@
 //------------Parameters------------//
 
 //Default wifi connection settings
-String ssid = "LapTom";
-String password = "1234567890";
+String ssid = "GenericWifi-SSID";
+String password = "GenericWifi-PWD";
 String hostname = "espui";
 
 //SD and configuration settings
 bool SD_attached = false;
+const char* generalConfig = "/generalConfiguration.txt";
 const char* config1 = "/configPCAP1.txt";
 const char* config2 = "/configPCAP2.txt";
 const char* config3 = "/configPCAP3.txt";
@@ -42,11 +43,35 @@ PCAP04IIC pcap3(pcap04_version_t::PCAP04_V1,pcap_measurement_modes_t::STANDARD,d
 //Variables to print the time on SD and keep a correct timeout for the webserver
 unsigned long current_micros = 0;
 unsigned long previous_micros = 0;
+unsigned long current_epoch = 0;
+unsigned long incremented_millis = 0;
+
+//Factors to zero out results and account for inaccuracies of reference capacitances
+bool updatedFactors = false;
+float zeroingFactors[3][6] = { 0 };
+float multiplicationFactors[3] = {1,1,1};
 
 //Arrays for the results
 int resultIndexes[3] = {0,0,0};
 float resultArray[3][6][9] = { 0 };
 bool newResults = false;
+bool initialisation = true;
+float currentTemperature = 0;
+
+float readTemperature(){
+  //MCP9701 temperature sensor
+  //Conversion from voltage to temperature: Vout = Tc * Ta + V0c
+  //Tc = Temperature coefficient, Ta = ambient temperature, V0c = sensor output at 0 celcius
+  //so: Ta = (Vout-V0c)/Tc
+
+  //remap ADC to a voltage output in mV 
+  //Taking into account that the ADC works best in the range of 0.1 to 3.2V (https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/)
+  float sensorInput = map(analogRead(tempSensor),0,4095,100,3200); 
+  float ambientTemperature = (sensorInput-400)/19.5;
+
+  currentTemperature = ambientTemperature;
+  return ambientTemperature;
+}
 
 void setup() {
   //Startup esp32 and begin serial connection
@@ -61,6 +86,7 @@ void setup() {
   pinMode(pcap1_int, INPUT);
   pinMode(pcap2_int, INPUT);
   pinMode(pcap3_int, INPUT);
+  pinMode(tempSensor, INPUT);
 
   //Make sure all PCAP chips are disabled
   pinMode(pcap1_i2c, OUTPUT);
@@ -72,17 +98,20 @@ void setup() {
   digitalWrite(pcap3_i2c, LOW);
 
 
+  //Initialise the SD-card
+  delay(100);
+  SD_Initialise();
+
   digitalWrite(powerLed,HIGH);
   setupConnection(ssid, password, hostname);
   setupWebserver();
+  time_t timeSinceEpoch = 1666051200;
+  struct timeval now = { .tv_sec = timeSinceEpoch};
+  settimeofday(&now, NULL);
 
   //Setup the webserver and show that the device is initialising
   ESPUI.updateLabel(webserverIDs.STATUS,"Initializing");
   ESPUI.begin("ESPUI Control");
-
-  //Initialise the SD-card
-  delay(100);
-  SD_Initialise();
 
   //Initialise the PCAP chips (only the ones that are enabled)
   if (pcap1_enable == true){
@@ -132,51 +161,67 @@ void setup() {
   if (pcap1_enable == true){
     digitalWrite(pcap1_i2c, HIGH);
     pcap1.cdc_complete_flag = true; 
-    readConfigfromSD(config1,&Config_PCAP_1);
+    readConfigfromSD(config1,&Config_PCAP_1,1);
     pcap1.update_config(&Config_PCAP_1);
     delay(300);
   }
   if (pcap2_enable == true){
     digitalWrite(pcap2_i2c, HIGH);
     pcap2.cdc_complete_flag = true;
-    readConfigfromSD(config2,&Config_PCAP_2);
+    readConfigfromSD(config2,&Config_PCAP_2,2);
     pcap2.update_config(&Config_PCAP_2);
     delay(300);
   }
   if (pcap3_enable == true){
     digitalWrite(pcap3_i2c, HIGH);
     pcap3.cdc_complete_flag = true;
-    readConfigfromSD(config3,&Config_PCAP_3);
+    readConfigfromSD(config3,&Config_PCAP_3,3);
     pcap3.update_config(&Config_PCAP_3);
     delay(300);
   }
   //Update webserver to show correct configuration
   updateFromConfig();
+  printFactors();
+  updateFactors();
   ESPUI.updateLabel(webserverIDs.STATUS,"Measurements active");
+  initialisation = false;
 }
 
 void loop() {
   //Check if new results are triggered by the interrupt pin
-  if (pcap1.cdc_complete_flag){
+  if (pcap1.cdc_complete_flag && initialisation == false){
     updateResults(&pcap1,0,pcap1_i2c);
   }
-  if (pcap2.cdc_complete_flag){
+  if (pcap2.cdc_complete_flag && initialisation == false){
     updateResults(&pcap2,1,pcap2_i2c);
   }
-  if (pcap3.cdc_complete_flag){
+  if (pcap3.cdc_complete_flag && initialisation == false){
     updateResults(&pcap3,2,pcap3_i2c);
   }
 
-  //If there are no new results, stop this loop and start over
-  if (newResults != true){
-    return;
+  if (updatedFactors == true){
+    printFactors();
+    updateFactors();
+    writeConfigtoSD(config1,&Config_PCAP_1,1);
+    writeConfigtoSD(config2,&Config_PCAP_2,2);
+    writeConfigtoSD(config3,&Config_PCAP_3,3);
+
+    updatedFactors = false;
   }
 
-  //If there are new results, then print them and write thems to SD
-  digitalWrite(ledB, HIGH);
-  printResults();
-  writetoSD();
-  updateWebserverValues();
-  digitalWrite(ledB, LOW);
-  newResults = false;
+  //If there are no new results, stop this loop and start over
+  if (newResults == true && initialisation == false){
+    //If there are new results, then print them and write thems to SD
+    //Also, update the time, since the updated time will be needed
+    digitalWrite(ledB, HIGH);
+    tm timeinfo;
+    getLocalTime(&timeinfo);
+    current_epoch = mktime(&timeinfo);
+    printResults();
+    writetoSD();
+    updateWebserverValues();
+    readTemperature();
+    digitalWrite(ledB, LOW);
+    newResults = false;
+  }
 }

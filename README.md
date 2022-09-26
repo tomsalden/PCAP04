@@ -56,7 +56,7 @@ The PCB design includes the following features:
 - Can be powered by 2x Li-Ion 18650 batteries (No protection circuitry, use at own risk! Reverse polarity protection is included)
 - Cam also be powered by 5V USB line in ESP32-wroom
 
-The Bill of Materials can be found [here](PCB/PCAP04_Interface/bom/ibom.html) and the order list is placed [here](PCB/PCAP04_Interface/bom/Farnell_Order_List.xlsx).
+The Bill of Materials can be found [here]([PCB/PCAP04_Interface/bom/ibom.html](https://tomsalden.github.io/PCAP04/PCB/PCAP04_Interface/bom/ibom.html)) and the order list is placed [here](PCB/PCAP04_Interface/bom/Farnell_Order_List.xlsx).
 
 # Programming instructions
 The project has been included in a PlatformIO folder. To setup the workspace, PlatformIO has to be downloaded and this folder has to be imported as a project. This should automatically set the correct libraries and settings. The firmware can be uploaded to an ESP-32 once the project has been imported.

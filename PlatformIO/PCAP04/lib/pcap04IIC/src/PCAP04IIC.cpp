@@ -291,12 +291,10 @@ void PCAP04IIC::initializeIIC()
   send_command(CDC_START);
  
   initialized = true;
-
-  delay(1000);
   
   Serial.println(); Serial.println("valid config"); Serial.println();
   
-  print_config();
+  //print_config();
 
   Serial.println("pcap initialized");
 

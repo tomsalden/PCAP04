@@ -12,84 +12,12 @@ The original library can be found on his [GitHub page](https://github.com/toreha
 
 An example of his integration of the library is visible on his [Metsensor page](https://github.com/torehan/metsensor-pio)
 
-# Interconnections PCAP04-Dev-Kit and ESP32 DevKit-WROOM
+The firmware was first developed for the [PCAP04-EVA-Kit](https://nl.mouser.com/ProductDetail/ScioSense/PCAP04-EVA-KIT?qs=YCa%2FAAYMW01pCMwt%2Fq6O1Q%3D%3D). Later on, the firmware is updated for usage of a custom PCB. In theory, the EVA-Kit should still work with some small modifications. The pinout and further instructions can be found from the section [PCAP04-EVA-board instructions](OldReadme.md). The next sections describe the project using the custom PCB.
 
-The interconnects used for the current firmware. The following images show the pinout of the [ESP32 board](https://raw.githubusercontent.com/AchimPieters/esp32-homekit-camera/master/Images/ESP32-30PIN-DEVBOARD.png) and the PCAP04.
+# Custom measurement PCB
 
-![](/Documents/ESP32-30PIN-DEVBOARD.png)
-![](/Documents/PCAP04%20Pinout.png)
-
-## Power
-
-| ESP32 | PCAP04                               |
-| ----- | ------------------------------------ |
-| 3V3   | VDD (J1.1 or J2.1)                   |
-| GND   | GND (J1.2, J1.9, J2.2, J2.7 or J2.9) |
-
-## Communication
-
-| ESP32          | PCAP04          |
-| -------------- | --------------- |
-| 3V3            | IIC_EN (J2.3)   |
-| GPIO21-I2C SDA | MOSI_SDA (J2.4) |
-| GPIO22-I2C SCL | SCK_SCL (J2.6)  |
-
-| ESP32            | SD-Card Reader |
-| ---------------- | -------------- |
-| 3V3              | +3.3           |
-| GND              | GND            |
-| GPIO5-VSPI CS0   | CS             |
-| GPIO18-VSPI CLK  | SCK            |
-| GPIO19-VSPI MISO | MISO           |
-| GPIO23-VSPI MOSI | MOSI           |
-
-## GPIO connections
-
-| ESP32  | PCAP04     |
-| ------ | ---------- |
-| GPIO2  | PG5 (J1.8) |
-| GPIO4  | PG4 (J1.7) |
-| GPIO16 | PG3 (J1.6) |
-| GPIO17 | PG2 (J1.5) |
-
-## Other connections
-
-| ESP32  | Interface |
-| ------ | --------- |
-| GPIO32 | Led Blue  |
-| GPIO33 | Led Green |
-| GPIO26 | Led Red   |
-| GPIO27 | Power Led |
-
-# Flashing the firmware
-
-For flashing the firmware, the basic Arduino IDE can be used. The board settings used are:
-
-- Board:            Node32s
-- Upload Speed:     921600
-- Flash Frequency   80MHz
-- Partition Scheme  Default
-- Core Debug Level  None
-
-# Using the Set-up
-
-At this point in time, the set-up works via the serial monitor and a limited web-interface. The following will happen at startup:
-
-1. The ESP32 will startup, displayed with the Power Led. Either it will connect to a known network or start its own network.
-2. The ESP32 will test if an SD card is available. It will create a new file for data storage. If the SD-card is not available, the indicator light will flash red three times.
-3. The ESP32 will check if a config file is present on the SD. If so, the config will be loaded. Otherwise, a new file will be created with the standard configuration.
-4. The ESP will test the I2C connection to the PCAP04. If there is a problem, a red light will appear. Otherwise the light turns blue
-5. The ESP will initialise the PCAP04 and write the correct configuration to the chip. Once done, the Led turns green
-6. After initialisation, the PCAP04 will start its measurements. The ESP32 will retreive a new measurement every second, indicated by a flashing red-green light.
-7. If an SD-card is available, the ESP32 will save the data as in a .csv format on the card. In addition, the ESP32 will display the current measurement values in the serial port. (If a more complete output is necessary, uncomment line 204 in the [PCAP04.ino](https://github.com/tomsalden/PCAP04/blob/main/PCAP04.ino#L192) file and comment the Print for Excel lines.)
-
-Now, the Serial Port of the Arduino IDE can be used to readout the values.
-In addition, the [Data Streamer](https://support.microsoft.com/nl-nl/office/wat-is-data-streamer-1d52ffce-261c-4d7b-8017-89e8ee2b806f) in Excel can record, process and save live data.
-
-# PCB (Design is finished, has been ordered)
-
-The PCB has space for three PCAP04 CDC's. Each CDC can readout 4 to 5 capacitances and has 1 reference capacitor to make sure the base value is correct.
-2 Li-Ion batteries will be attached at the back to power the board, 5-9V can be used for powering this device.
+The PCB has space for three PCAP04 CDC's. Each CDC can read 4 to 5 capacitances and has 1 reference capacitor to make sure the base value is correct.
+1 Li-Ion battery will be attached at the back to power the board. Afterwards, the battery is protected and the voltage is boosted to 5V with a HW-775.
 As an alternative, one PCAP04 EVA Board can be used instead of one PCAP04 bare chip.
 
 The frontside of the PCB:
@@ -128,6 +56,44 @@ The PCB design includes the following features:
 - Can be powered by 2x Li-Ion 18650 batteries (No protection circuitry, use at own risk! Reverse polarity protection is included)
 - Cam also be powered by 5V USB line in ESP32-wroom
 
+The Bill of Materials can be found [here]([PCB/PCAP04_Interface/bom/ibom.html](https://tomsalden.github.io/PCAP04/PCB/PCAP04_Interface/bom/ibom.html)) and the order list is placed [here](PCB/PCAP04_Interface/bom/Farnell_Order_List.xlsx).
+
+# Programming instructions
+The project has been included in a PlatformIO folder. To setup the workspace, PlatformIO has to be downloaded and this folder has to be imported as a project. This should automatically set the correct libraries and settings. The firmware can be uploaded to an ESP-32 once the project has been imported.
+
+# Program Instructions
+Once the firmware has been compiled and uploaded and the PCB has been manufactured, the measurement PCB is ready to start measuring. Place an empty SD card in the SD card slot. Put in a battery in the holder and turn on the switch. The PCB will start its measurements.
+
+## First run
+ When the system is turned on, first the program will generate configuration files. Four configuration files in total, one for each PCAP04 chip and one general configuration file.
+ 
+ The general configuration file will define the wifi network the system will try to connect to. The PCAP configuration files define the configuration that can be changed in the webserver.
+ 
+ After this, the system will start with the default settings. It will search for a Wifi Network called "GenericWifi-SSID" with the password "GenericWifi-PWD". If this is not found, then it will create a hotspot.
+ Afterwards, the system will apply the default configuration for the PCAP chips and startup a webserver. This can be accessed at the address "192.168.4.1".
+
+ ## Further operation
+ Once the system has been stared once, the general configurations file can be edited to let the ESP32 connect to a specified wifi network at startup. If this is not found, the system will create a hotspot.
+
+ Any changes in the webserver settings will immediately be written to the SD card in the corresponding configuration file. This means that at startup, the chips will be loaded with the newest configuration.
+
+ ## Data
+ The ESP32 collects the data from all chips. In addition, the system will print a time and a temperature at the time of the measurement. The data file that is generated is a text-based file that can be interpreted as a csv file.
+
+ ### Time
+ The measurement of the chips are timed, and the output that will be written will correspond to the time they are taken.
+ Because the system does not have a Real Time Clock (RTC), the ESP32 does not know the time at startup. Therefore, the default time is set at October 18 2022 at 0:00. To set the time and date to the correct moment, connect to the webserver and press the "Set Current Time" button. From that moment on, the time will be synchronised with the device that pressed on that button until the ESP32 is restarted.
+
+ ### Temperature
+ The temperature on the PCB is measured using a MCP-9701. The voltage reading is converted to a temperature and saved in the data files.
+
+ ### Capacitance data
+ The capacitance of each pin of every PCAP chip is read out as fast as possible. When this is done, the data is collected and written to the data file.
+
+## Indication LED
+The PCB features an indication LED. This LED shows the status of the program.
+After startup and configuration, the measurement starts and the LED will blink blue-green.
+
 # Features and Future improvements
 
 ✅Ability to connect to and read data from PCAP04
@@ -148,8 +114,10 @@ The PCB design includes the following features:
 
 ✅Allow for three PCAP04 devices at the same time
 
+✅Clean up code for deployment
+
 ⬜️~~Automatically change output format depending on mode selection~~
 
-⬜️Make a csv file automatically from the output
+⬜️~~Make a csv file automatically from the output~~
 
-⬜️Clean up code for deployment
+

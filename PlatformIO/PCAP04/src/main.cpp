@@ -62,6 +62,7 @@ bool newResults = false;
 bool initialisation = true;
 
 float currentTemperature = 0;
+float currentPressure = 0;
 Adafruit_NeoPixel indicatorLed(1,ws2812Led, NEO_GRB + NEO_KHZ800);
 
 float readTemperature(){
@@ -77,6 +78,20 @@ float readTemperature(){
 
   currentTemperature = ambientTemperature;
   return ambientTemperature;
+}
+
+float readPressureCommercial(){
+  //Read the absolute pressure from a commercial C32 pressure sensor as a reference pressure sensor
+  //The sensor is configured as a Wheatstone bridge, so two inputs will be read
+
+  float C32_pos = map(analogRead(Vpos_C32),0,4095,100,3200);  //Converted from analogRead to mV
+  float C32_neg = map(analogRead(Vneg_C32),0,4095,100,3200);  //Converted from analogRead to mV
+
+  float V_pressure = C32_pos-C32_neg;
+  V_pressure = V_pressure * 3.3 / 5;  //Convert from 5V to 3.3V operating
+  
+  currentPressure = V_pressure / C32_sensitivity;
+  return currentPressure;
 }
 
 void updateWS2812(int brightness, int R, int G, int B){
@@ -96,6 +111,8 @@ void setup() {
   pinMode(pcap2_int, INPUT);
   pinMode(pcap3_int, INPUT);
   pinMode(tempSensor, INPUT);
+  pinMode(Vpos_C32, INPUT);
+  pinMode(Vneg_C32, INPUT);
 
   indicatorLed.begin();
   updateWS2812(50,0,255,0);
@@ -242,10 +259,12 @@ void loop() {
     tm timeinfo;
     getLocalTime(&timeinfo);
     current_epoch = mktime(&timeinfo);
+
     printResults();
     writetoSD();
     updateWebserverValues();
     readTemperature();
+    readPressureCommercial();
     digitalWrite(ledB, LOW);
     newResults = false;
   }

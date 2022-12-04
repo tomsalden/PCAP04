@@ -112,6 +112,7 @@ void updateWebserverValues(){
     ESPUI.updateLabel(webserverIDs.timeField, timestring);
 
     ESPUI.updateLabel(webserverIDs.temperature, "Current temperature: " + String(currentTemperature) + " degrees Celcius");
+    ESPUI.updateLabel(webserverIDs.commericalPressure, "Commercial pressure sensor (bar): " + String(currentPressure) + " bar");
 
     previous_micros = current_micros;
   }
@@ -499,6 +500,7 @@ void setupWebserver(){
     //Outside of the tabs
     webserverIDs.STATUS = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin);
     webserverIDs.temperature = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin, webserverIDs.STATUS);
+    webserverIDs.commericalPressure = ESPUI.addControl(ControlType::Label, "Status:", "Not recording", ControlColor::Alizarin, webserverIDs.STATUS);    
     webserverIDs.timeField = ESPUI.addControl(ControlType::Label, "Current time", "Not set", ControlColor::Alizarin);
     webserverIDs.timeButton = ESPUI.addControl(ControlType::Button, "Set current time", "Set current time", ControlColor::Alizarin, webserverIDs.timeField, &buttonCallback);
     webserverIDs.timeId = ESPUI.addControl(Time, "", "", None, 0, timeCallback);

@@ -58,6 +58,7 @@ void writetoSD(){
 
   String dataMessage = String(current_epoch) + milliseconds + ";";            //Write the time in epoch with milliseconds
   dataMessage = dataMessage + String(currentTemperature) + ";";               //Write the temperature
+  dataMessage = dataMessage + String(currentPressure) + ";";                  //Write the pressure from the commercial sensor
 
   for (int i = 0; i < sizeof(resultIndexes)/sizeof(int); i++){                //Print the results of all PCAP's
     for (int j = 0; j < 6; j++){
@@ -280,7 +281,7 @@ void SD_Initialise(){
     file = SD.open(fileName);
   }
   Serial.println((String)"File: " + fileName + " does not exist yet, creating file...");
-  writeFile(SD,fileName.c_str(),"time;temperature;PCAP 1-1;PCAP 1-2;PCAP 1-3;PCAP 1-4;PCAP 1-5;PCAP 1-6;PCAP 2-1;PCAP 2-2;PCAP 2-3;PCAP 2-4;PCAP 2-5;PCAP 2-6;PCAP 3-1;PCAP 3-2;PCAP 3-3;PCAP 3-4;PCAP 3-5;PCAP 3-6;\r\n");
+  writeFile(SD,fileName.c_str(),"time;temperature;commercialPressure;PCAP 1-1;PCAP 1-2;PCAP 1-3;PCAP 1-4;PCAP 1-5;PCAP 1-6;PCAP 2-1;PCAP 2-2;PCAP 2-3;PCAP 2-4;PCAP 2-5;PCAP 2-6;PCAP 3-1;PCAP 3-2;PCAP 3-3;PCAP 3-4;PCAP 3-5;PCAP 3-6;\r\n");
   file.close();
 
   //Read the general configuration

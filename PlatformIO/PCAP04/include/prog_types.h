@@ -9,6 +9,7 @@ struct webserverControlIDs
     uint16_t timeId;
 
     uint16_t temperature;
+    uint16_t commericalPressure;
 
     uint16_t webResult0_0;
     uint16_t webResult0_1;

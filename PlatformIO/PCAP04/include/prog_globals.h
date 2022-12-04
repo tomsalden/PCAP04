@@ -41,6 +41,7 @@ extern bool newResults;
 extern bool initialisation;
 
 extern float currentTemperature;
+extern float currentPressure;
 extern void updateWS2812(int brightness, int R, int G, int B);
 
 extern String ssid;

@@ -18,10 +18,14 @@
 //Definitions for indicator Leds and other interfaces
 #define powerLed 27
 #define ledR 26
-#define ledG 35
-#define ledB 32
+#define ledG 26
+#define ledB 26
 #define ws2812Led 25
 #define tempSensor 34
+#define Vpos_C32 35 //commercial absolute pressure sensor
+#define Vneg_C32 32 //commerical absolute pressure sensor
+
+#define C32_sensitivity 23  //in mV/bar
 
 //Definitions for SD-Card
 #define SD_CS 5
